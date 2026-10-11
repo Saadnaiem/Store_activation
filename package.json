@@ -1,0 +1,25 @@
+{
+  "name": "in-store-activation-portal",
+  "version": "1.0.0",
+  "description": "In-Store Activation Portal - Dr. Sulaiman Al Habib Pharmacy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "express": "^4.21.2"
+  },
+  "keywords": [
+    "render",
+    "firebase",
+    "activation-portal",
+    "pharmacy"
+  ],
+  "author": "Dr. Sulaiman Al Habib Pharmacy",
+  "license": "ISC"
+}

@@ -1,0 +1,10 @@
+services:
+  # Option 1: Web Service (Node.js + Express with health check and caching)
+  - type: web
+    name: in-store-activation-portal
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true

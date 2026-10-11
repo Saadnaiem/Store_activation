@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In-Store Activation Portal - Al Habib Pharmacy</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#e8f5e9', 100: '#c8e6c9', 500: '#4caf50',
+              600: '#43a047', 700: '#388e3c', 800: '#2e7d32', /* Official Corporate Green */
+              900: '#1b5e20',
+            }
+          },
+          boxShadow: {
+            'glass': '0 4px 30px rgba(0, 0, 0, 0.05)',
+            'float': '0 10px 40px -10px rgba(0,0,0,0.15)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .modal-backdrop { transition: opacity 0.3s ease; }
+    .modal-panel { transition: transform 0.3s ease, opacity 0.3s ease; }
+
+    input:focus, select:focus, textarea:focus { background-color: #ffffff; }
+  </style>
+</head>
+<body class="text-slate-900 font-bold antialiased min-h-screen flex flex-col relative">
+
+  <header class="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 shadow-sm">
+    <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-lg shadow-brand-800/30 shrink-0">
+          <i class="fa-solid fa-bolt text-xl sm:text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="font-black text-lg sm:text-2xl text-slate-900 tracking-tight leading-tight">In-Store Activation Portal</h1>
+          <p class="text-[10px] sm:text-xs text-brand-700 font-extrabold tracking-widest uppercase mt-0.5">Dr. Sulaiman Al Habib Pharmacy</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+        <button id="btn-export-csv" onclick="exportToCSV()" class="hidden bg-emerald-100 text-emerald-800 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-emerald-200 transition-colors flex items-center gap-2 shadow-sm border border-emerald-200">
+          <i class="fa-solid fa-file-csv"></i> <span class="hidden sm:inline">CSV Export</span>
+        </button>
+        <button id="btn-portal-settings" onclick="openModal('modal-settings')" class="hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center transition-colors shadow-sm" title="Portal Settings">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <div id="auth-section" class="flex items-center">
+          <button onclick="triggerGoogleLogin()" class="bg-brand-800 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-2 shadow-md">
+            <i class="fa-brands fa-google"></i> Sign In
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8">
+    
+    <div class="w-full bg-slate-200/50 p-1.5 sm:p-2 rounded-2xl shadow-inner border border-slate-200 flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-2">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all shadow-md bg-brand-600 text-white flex justify-center items-center shrink-0 border border-transparent group">
+        <span class="flex items-center gap-2"><i id="icon-dashboard" class="fa-solid fa-chart-pie text-white transition-colors"></i> <span class="whitespace-nowrap">Activations</span></span>
+      </button>
+      
+      <button onclick="switchTab('new')" id="tab-new" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all text-slate-500 hover:text-slate-800 hover:bg-white flex justify-center items-center shrink-0 border border-transparent group shadow-sm">
+        <span class="flex items-center gap-2"><i id="icon-new" class="fa-solid fa-calendar-plus text-emerald-500 group-hover:text-emerald-600 transition-colors"></i> <span class="whitespace-nowrap">Book Activity</span></span>
+      </button>
+      
+      <button onclick="switchTab('free-busy')" id="tab-free-busy" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all text-slate-500 hover:text-slate-800 hover:bg-white flex justify-center items-center shrink-0 border border-transparent group shadow-sm">
+        <span class="flex items-center gap-2"><i id="icon-free-busy" class="fa-solid fa-map-location-dot text-purple-500 group-hover:text-purple-600 transition-colors"></i> <span class="whitespace-nowrap">Explore Availability</span></span>
+      </button>
+    </div>
+
+    <div id="view-dashboard" class="flex flex-col gap-8 fade-in w-full">
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full">
+        
+        <div id="card-total" onclick="setDashboardFilter('ALL')" class="bg-blue-500 text-white ring-4 ring-blue-300 ring-offset-4 scale-[1.03] shadow-[0_0_25px_rgba(59,130,246,0.5)] z-20 p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden">
+           <div class="relative z-10">
+              <p class="text-xs sm:text-sm font-black text-blue-100 uppercase tracking-widest mb-1 transition-colors">Total Scheduled</p>
+              <h3 class="text-4xl sm:text-5xl font-black text-white" id="metric-total">0</h3>
+              <span class="text-[10px] sm:text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 group-hover:bottom-[-4px]">Click to view all</span>
+           </div>
+           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl sm:text-3xl transition-colors shadow-inner relative z-10">
+              <i class="fa-solid fa-bullhorn"></i>
+           </div>
+        </div>
+
+        <div id="card-active" onclick="setDashboardFilter('ACTIVE')" class="bg-emerald-500 text-white p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent">
+           <div class="relative z-10">
+              <p class="text-xs sm:text-sm font-black text-emerald-100 uppercase tracking-widest mb-1 transition-colors">Active Now</p>
+              <h3 class="text-4xl sm:text-5xl font-black text-white" id="metric-active">0</h3>
+              <span class="text-[10px] sm:text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 group-hover:bottom-[-4px]">Click to filter active</span>
+           </div>
+           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl sm:text-3xl transition-colors shadow-inner relative z-10">
+              <i class="fa-solid fa-bolt"></i>
+           </div>
+        </div>
+
+        <div id="card-stores" onclick="showStoresAnalytics()" class="bg-purple-500 text-white p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent">
+           <div class="relative z-10">
+              <p class="text-xs sm:text-sm font-black text-purple-100 uppercase tracking-widest mb-1 transition-colors">Stores Utilized</p>
+              <h3 class="text-4xl sm:text-5xl font-black text-white" id="metric-stores">0</h3>
+              <span class="text-[10px] sm:text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 group-hover:bottom-[-4px]">Click to view analytics</span>
+           </div>
+           <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl sm:text-3xl transition-colors shadow-inner relative z-10">
+              <i class="fa-solid fa-shop"></i>
+           </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-glass border border-slate-200 overflow-hidden flex flex-col w-full">
+        <div class="p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="flex items-center gap-3 flex-wrap">
+            <h2 class="text-2xl font-black text-slate-900">Campaign Directory</h2>
+            <div id="master-bulk-actions" class="hidden items-center gap-2">
+              <button onclick="promptDeleteSelected()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5 shadow-sm border border-red-200">
+                <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="selected-count">0</span>)
+              </button>
+            </div>
+            <div id="master-wipe-section" class="hidden">
+              <button onclick="promptWipeAll()" class="bg-red-600 text-white hover:bg-red-700 px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-skull-crossbones"></i> Wipe All Database
+              </button>
+            </div>
+          </div>
+          <div class="relative w-full sm:w-96">
+            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="search-dashboard" onkeyup="renderDashboard()" placeholder="Search any column..." class="w-full pl-11 pr-4 py-2.5 sm:py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none font-bold text-slate-900 transition-colors focus:bg-white shadow-inner">
+          </div>
+        </div>
+        <div class="overflow-x-auto w-full">
+          <table class="w-full text-left text-sm min-w-[900px]">
+            <thead class="bg-brand-800 text-white font-black uppercase tracking-wider text-xs">
+              <tr>
+                <th class="px-4 py-4 w-[5%] text-center">
+                  <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this)" class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
+                </th>
+                <th class="px-6 py-4 w-[25%]">Campaign & Brand</th>
+                <th class="px-6 py-4 w-[15%]">Category</th>
+                <th class="px-6 py-4 w-[20%]">Schedule Duration</th>
+                <th class="px-6 py-4 w-[25%]">Allocated Store Locations</th>
+                <th class="px-6 py-4 w-[10%] text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="dashboard-table-body" class="divide-y divide-slate-100 bg-white">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+          <div id="dashboard-empty-state" class="hidden p-12 sm:p-20 flex flex-col items-center justify-center text-center">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4 shadow-inner">
+              <i class="fa-solid fa-folder-open text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-black text-slate-900">No activations found</h3>
+            <p class="text-slate-600 font-bold text-sm mt-1 max-w-sm">Use the 'Book Activity' tab to schedule new in-store activities.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-new" class="hidden flex flex-col gap-6 fade-in">
+      <div id="auth-warning" class="hidden bg-red-50 border border-red-200 p-5 rounded-2xl shadow-sm flex items-start gap-4">
+        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-lock text-red-600"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-red-900">Authentication Required</h3>
+          <p class="text-sm font-bold text-red-800 mt-1">Access to booking is restricted. Please sign in with your Google account using the button in the top right to book store floor space.</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-100 overflow-hidden" id="booking-container-wrapper">
+        <div class="p-6 md:p-8 border-b border-emerald-100 bg-gradient-to-r from-white to-emerald-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 id="form-section-title" class="text-2xl font-black text-emerald-900 tracking-tight">Book Activity</h2>
+            <p class="text-sm text-emerald-700 font-black mt-1"><i class="fa-solid fa-shield-halved mr-1"></i> Strict Policy: Only 1 activity per store is permitted.</p>
+          </div>
+        </div>
+        
+        <form id="activation-form" onsubmit="handleActivationSubmit(event)" class="p-6 md:p-8 grid grid-cols-1 xl:grid-cols-3 gap-8 md:gap-12 bg-white w-full">
+          
+          <div class="xl:col-span-2 space-y-8">
+            <div class="bg-gradient-to-br from-white to-emerald-50/40 p-6 md:p-8 rounded-3xl border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-colors">
+              <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-3xl"></div>
+              <div class="flex items-center gap-3 mb-6">
+                 <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-tag text-sm"></i>
+                 </div>
+                 <h3 class="text-sm font-black text-emerald-900 tracking-widest uppercase">1. Campaign Identity</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-black text-slate-900 mb-2">Activity Title <span class="text-red-500">*</span></label>
+                  <input type="text" id="f-activityName" required placeholder="e.g. Summer Gelato Sampling" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">Brand Name <span class="text-red-500">*</span></label>
+                  <input type="text" id="f-brandName" required placeholder="e.g. Magnum" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">Vendor Name <span class="text-red-500">*</span></label>
+                  <input type="text" id="f-vendorName" required placeholder="e.g. Unilever" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">Product Category <span class="text-red-500">*</span></label>
+                  <select id="f-category" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 cursor-pointer transition-shadow">
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="WELLNESS">WELLNESS</option>
+                    <option value="BEAUTY">BEAUTY</option>
+                    <option value="PERSONAL CARE">PERSONAL CARE</option>
+                    <option value="MOM AND BABY">MOM AND BABY</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">Activity Type <span class="text-red-500">*</span></label>
+                  <input type="text" id="f-activityType" required placeholder="e.g. Sampling Booth" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-black text-slate-900 mb-2">Objective of Activity <span class="text-red-500">*</span></label>
+                  <input type="text" id="f-objective" required placeholder="e.g. Boost Q3 Sales and Brand Awareness" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-black text-slate-900 mb-2">Activity Details <span class="text-red-500">*</span></label>
+                  <textarea id="f-description" required rows="3" placeholder="Provide operational scope, dimensions, promoter headcount, etc." class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm font-black text-slate-900 resize-none transition-shadow"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-white to-emerald-50/40 p-6 md:p-8 rounded-3xl border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-colors">
+              <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-3xl"></div>
+              <div class="flex items-center gap-3 mb-6">
+                 <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-calendar-days text-sm"></i>
+                 </div>
+                 <h3 class="text-sm font-black text-emerald-900 tracking-widest uppercase">2. Schedule & Materials</h3>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">Start Date <span class="text-red-500">*</span></label>
+                  <input type="date" id="f-startDate" required onchange="checkStoreConflicts()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">End Date <span class="text-red-500">*</span></label>
+                  <input type="date" id="f-endDate" required onchange="checkStoreConflicts()" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">Start Time <span class="text-red-500">*</span></label>
+                  <input type="time" id="f-startTime" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+                </div>
+                <div>
+                  <label class="block text-sm font-black text-slate-900 mb-2">End Time <span class="text-red-500">*</span></label>
+                  <input type="time" id="f-endTime" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-black text-slate-900 mb-2">Attach Materials / Booth Mockup</label>
+                  <div class="mt-1 flex flex-col justify-center px-6 pt-5 pb-6 border-2 border-emerald-200 border-dashed rounded-2xl bg-white hover:bg-emerald-50/50 transition-colors relative overflow-hidden cursor-pointer group upload-area" onclick="document.getElementById('f-image').click()">
+                    <div class="space-y-2 text-center relative z-10">
+                      <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fa-regular fa-images text-xl text-emerald-600"></i>
+                      </div>
+                      <div class="flex text-sm justify-center">
+                        <span class="bg-white rounded-lg font-black text-emerald-800 px-4 py-2 shadow-sm border border-emerald-100 group-hover:border-emerald-300 transition-colors">
+                          <span>Upload Images</span>
+                          <input id="f-image" type="file" class="sr-only" accept="image/*" multiple>
+                        </span>
+                      </div>
+                      <p class="text-xs font-bold text-slate-600 max-w-[280px] mx-auto leading-relaxed">Attach booth design renderings or POSM banners. Select multiple images of any size.</p>
+                    </div>
+                  </div>
+                  <div id="image-preview-gallery" class="flex flex-wrap gap-4 mt-4 empty:hidden"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="xl:col-span-1 flex flex-col h-[500px] sm:h-[850px] bg-gradient-to-b from-white to-emerald-50/30 rounded-3xl border border-emerald-100 shadow-glass overflow-hidden relative">
+            <div class="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+            <div class="p-5 border-b border-emerald-100 bg-white flex flex-col gap-4">
+              <div class="flex justify-between items-center mt-1">
+                <div class="flex items-center gap-2">
+                   <div class="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0 shadow-inner">
+                      <i class="fa-solid fa-store text-xs"></i>
+                   </div>
+                   <h3 class="font-black text-emerald-900 text-sm uppercase tracking-wider">3. Allocation</h3>
+                </div>
+                <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-black bg-slate-200 text-slate-800" id="store-selection-count">0 Selected</span>
+              </div>
+              <button type="button" id="btn-manage-stores" onclick="openModal('modal-stores')" class="hidden w-full flex justify-center items-center gap-2 bg-white border border-emerald-200 text-emerald-900 px-4 py-2.5 rounded-xl text-sm font-black hover:bg-emerald-50 transition-colors shadow-sm">
+                <i class="fa-solid fa-folder-plus text-emerald-700"></i> Add / Import Stores
+              </button>
+              <div class="relative">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="store-search-input" onkeyup="renderStoreCheckboxes()" placeholder="Search stores..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-black text-slate-900 shadow-sm transition-shadow">
+              </div>
+            </div>
+
+            <div id="conflict-alert" class="hidden p-4 bg-red-50 border-b border-red-200 text-red-900"></div>
+            <div class="flex-1 p-3 overflow-y-auto" id="store-checkbox-container"></div>
+          </div>
+
+          <div class="xl:col-span-3 pt-6 border-t border-slate-200 flex justify-end gap-3">
+            <button type="button" id="btn-cancel-edit" onclick="cancelEdit()" class="hidden bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-black hover:bg-slate-300 transition-colors flex items-center gap-2 text-base shadow-sm">
+              Cancel
+            </button>
+            <button type="submit" id="btn-submit" disabled class="bg-gradient-to-r from-emerald-600 to-emerald-800 text-white px-8 py-3.5 rounded-xl font-black hover:from-emerald-700 hover:to-emerald-900 transition-all shadow-lg shadow-emerald-800/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-base">
+              <i class="fa-solid fa-calendar-check"></i> Confirm & Schedule
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="view-free-busy" class="hidden flex flex-col gap-6 fade-in w-full">
+      <div class="bg-gradient-to-br from-white to-emerald-50/50 p-6 md:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-100 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+        <h2 class="text-2xl font-black text-emerald-900 mb-6 tracking-tight flex items-center gap-3">
+           <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 shadow-inner">
+              <i class="fa-solid fa-map-location-dot text-lg"></i>
+           </div>
+           Store Availability Explorer
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div class="w-full">
+            <label class="block text-sm font-black text-slate-900 mb-2">Check From Date</label>
+            <input type="date" id="fb-startDate" onchange="runFreeBusyCheck()" class="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+          </div>
+          <div class="w-full">
+            <label class="block text-sm font-black text-slate-900 mb-2">Check To Date</label>
+            <input type="date" id="fb-endDate" onchange="runFreeBusyCheck()" class="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+          </div>
+          <div class="w-full">
+             <label class="block text-sm font-black text-slate-900 mb-2">Search Specific Store</label>
+             <div class="relative">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="fb-search-store" onkeyup="runFreeBusyCheck()" placeholder="e.g. Rayan..." class="w-full pl-10 pr-4 py-3 bg-white border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-black text-slate-900 shadow-sm transition-shadow">
+             </div>
+          </div>
+          <button onclick="runFreeBusyCheck(true)" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-800 text-white px-8 py-3 rounded-xl font-black hover:from-emerald-700 hover:to-emerald-900 transition-all shadow-lg shadow-emerald-800/20 h-[48px] flex items-center justify-center gap-2 border border-transparent">
+            <i class="fa-solid fa-radar"></i> Explore Availability
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white rounded-3xl shadow-glass border border-emerald-200 overflow-hidden flex flex-col h-[600px]">
+          <div class="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-200 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-200 flex items-center justify-center text-emerald-800 shadow-sm"><i class="fa-solid fa-check text-lg"></i></div>
+              <h3 class="font-black text-emerald-900 text-lg">100% Available Stores</h3>
+            </div>
+            <span id="fb-free-count" class="bg-white text-emerald-800 border border-emerald-300 text-sm font-black px-4 py-1.5 rounded-full shadow-sm">0</span>
+          </div>
+          <div class="flex-1 overflow-y-auto bg-slate-50/30 p-2">
+            <ul id="fb-free-list" class="divide-y divide-slate-100">
+              <li class="p-10 text-slate-500 font-bold text-center text-sm">Select dates and explore to see fully available branches.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-glass border border-rose-200 overflow-hidden flex flex-col h-[600px]">
+          <div class="p-5 bg-gradient-to-r from-rose-50 to-red-50 border-b border-rose-200 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-rose-200 flex items-center justify-center text-rose-800 shadow-sm"><i class="fa-solid fa-ban text-lg"></i></div>
+              <h3 class="font-black text-rose-900 text-lg">Occupied Stores (Detailed)</h3>
+            </div>
+            <span id="fb-busy-count" class="bg-white text-rose-800 border border-rose-300 text-sm font-black px-4 py-1.5 rounded-full shadow-sm">0</span>
+          </div>
+          <div class="flex-1 overflow-y-auto bg-slate-50/30 p-2">
+            <ul id="fb-busy-list" class="divide-y divide-slate-100">
+              <li class="p-10 text-slate-500 font-bold text-center text-sm">Select dates to see occupied branches and precisely when they are free.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="modal-details" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 modal-backdrop">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col transform scale-95 modal-panel overflow-hidden" id="modal-details-content-wrapper">
+      <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white shrink-0">
+        <div class="flex justify-between items-center w-full sm:w-auto">
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900">Activity Overview</h2>
+          <button onclick="closeModal('modal-details')" class="sm:hidden text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="flex items-center justify-start sm:justify-end w-full sm:w-auto gap-2 sm:gap-3 shrink-0">
+          <button onclick="previewPDF()" id="btn-preview-pdf" class="flex-1 sm:flex-none justify-center bg-slate-800 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-md">
+            <i class="fa-solid fa-eye text-white"></i> <span class="hidden sm:inline">Preview PDF</span><span class="sm:inline sm:hidden">Preview</span>
+          </button>
+          <button onclick="downloadPDF()" id="btn-download-pdf" class="flex-1 sm:flex-none justify-center bg-brand-800 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-2 shadow-md">
+            <i class="fa-solid fa-file-pdf text-white"></i> <span class="hidden sm:inline">Export PDF</span><span class="sm:inline sm:hidden">Export</span>
+          </button>
+          <button onclick="closeModal('modal-details')" class="hidden sm:flex text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 w-10 h-10 rounded-full items-center justify-center transition-colors shrink-0 shadow-sm ml-1"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+      </div>
+      <div class="p-4 sm:p-8 overflow-y-auto bg-slate-50 flex-1" id="modal-details-content"></div>
+    </div>
+  </div>
+
+  <div id="modal-pdf-preview" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden z-[100] flex items-center justify-center p-4 sm:p-8 opacity-0 modal-backdrop">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-4xl h-[92vh] flex flex-col transform scale-95 modal-panel overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-900 text-white shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white"><i class="fa-solid fa-file-pdf"></i></div>
+          <h2 class="text-lg font-black tracking-tight">PDF Dossier Live Preview</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="downloadPDF()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-brand-700 transition-colors flex items-center gap-2 shadow-md">
+            <i class="fa-solid fa-download"></i> Download PDF
+          </button>
+          <button onclick="closeModal('modal-pdf-preview')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="flex-1 p-6 overflow-y-auto bg-slate-100 flex justify-center">
+        <div id="pdf-preview-container" class="w-full max-w-[210mm] bg-white shadow-2xl rounded-xl p-8 sm:p-12 min-h-[297mm] text-slate-800 font-sans mx-auto relative"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-stores" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 opacity-0 modal-backdrop">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg transform scale-95 modal-panel overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+        <h2 class="text-lg font-black text-slate-900">Manage Store Directory</h2>
+        <button onclick="closeModal('modal-stores')" class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-6 space-y-6 overflow-y-auto">
+        <div>
+          <label class="block text-sm font-black text-slate-900 mb-2">Add Single Store</label>
+          <div class="flex gap-2">
+            <input type="text" id="manual-store-input" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none font-black text-slate-900" placeholder="e.g. Branch 101 - Riyadh">
+            <button type="button" onclick="addSingleStore()" class="bg-brand-800 text-white px-5 py-2.5 rounded-xl font-black hover:bg-brand-900 transition-colors shadow-md whitespace-nowrap">Add</button>
+          </div>
+        </div>
+        <div class="pt-4 border-t border-slate-200">
+          <label class="block text-sm font-black text-slate-900 mb-2">Bulk Upload Stores (Paste list)</label>
+          <textarea id="bulk-store-input" rows="3" class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none font-black text-slate-900" placeholder="Paste multiple stores here...&#10;Store 1&#10;Store 2"></textarea>
+          <button type="button" onclick="bulkAddStores()" class="mt-2 w-full bg-slate-800 text-white px-5 py-2.5 rounded-xl font-black hover:bg-slate-900 transition-colors shadow-sm text-sm">Bulk Add Stores</button>
+        </div>
+        <div class="pt-4 border-t border-slate-200">
+          <label class="block text-sm font-black text-slate-900 mb-2">Existing Directory (Edit/Delete)</label>
+          <div id="manage-stores-list" class="space-y-2 max-h-60 overflow-y-auto bg-slate-50 p-3 rounded-xl border border-slate-200"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 opacity-0 modal-backdrop">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg transform scale-95 modal-panel overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
+        <h2 class="text-lg font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-gear text-brand-700"></i> Portal Settings</h2>
+        <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="p-6 space-y-8 overflow-y-auto flex-1">
+        <div>
+          <label class="block text-sm font-black text-slate-900 mb-2">PDF Export Logo</label>
+          <p class="text-xs text-slate-500 font-bold mb-4 leading-relaxed">Upload your official logo here. This saves it directly to the database to guarantee it appears on every PDF.</p>
+          <div class="flex flex-col justify-center px-6 py-6 border-2 border-slate-300 border-dashed rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer" onclick="document.getElementById('setting-logo-upload').click()">
+            <div class="text-center">
+              <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-600 mb-2"></i>
+              <div class="text-sm font-black text-brand-800">Click to upload logo</div>
+              <input id="setting-logo-upload" type="file" class="sr-only" accept="image/png, image/jpeg">
+            </div>
+          </div>
+          <div id="setting-logo-preview" class="mt-4 hidden p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+            <p class="text-xs font-black text-emerald-800 mb-2 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Logo Active</p>
+            <img id="setting-logo-img" src="" class="h-12 w-auto object-contain bg-white rounded shadow-sm border border-slate-200 px-2 py-1">
+          </div>
+        </div>
+
+        <div id="whitelist-settings-section" class="pt-6 border-t border-slate-200">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-black text-slate-900">Google Account Access Control</label>
+            <span class="px-2 py-0.5 bg-brand-100 text-brand-800 rounded text-[10px] font-black uppercase">Master Admin Only</span>
+          </div>
+          <p class="text-xs text-slate-500 font-bold mb-4 leading-relaxed">Choose whether anyone with a Google account can sign in or restrict access exclusively to pre-approved emails.</p>
+          
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <button type="button" onclick="setWhitelistMode('ALL')" id="btn-mode-all" class="py-3 px-4 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-globe"></i> All Google Accounts
+            </button>
+            <button type="button" onclick="setWhitelistMode('SPECIFIC')" id="btn-mode-specific" class="py-3 px-4 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i> Specific Accounts Only
+            </button>
+          </div>
+
+          <div id="whitelist-container" class="hidden space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <div>
+              <label class="block text-xs font-black text-slate-700 mb-1.5">Add Authorized Google Email</label>
+              <div class="flex gap-2">
+                <input type="email" id="whitelist-email-input" class="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 outline-none font-black text-slate-900" placeholder="user@gmail.com">
+                <button type="button" onclick="addWhitelistEmail()" class="bg-brand-800 text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-brand-900 transition-colors shadow-sm">Add</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-black text-slate-700 mb-1.5">Authorized Email Directory (Toggle Access)</label>
+              <div id="whitelist-emails-list" class="space-y-1.5 max-h-40 overflow-y-auto bg-white p-2 rounded-xl border border-slate-200"></div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end">
+            <button type="button" onclick="saveWhitelistToDB()" class="bg-brand-800 text-white px-5 py-2.5 rounded-xl text-sm font-black hover:bg-brand-900 transition-colors shadow-md flex items-center gap-2">
+              <i class="fa-solid fa-floppy-disk"></i> Save Access Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-delete-confirm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[110] flex items-center justify-center p-4 opacity-0 modal-backdrop">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm transform scale-95 modal-panel overflow-hidden p-8 text-center">
+      <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 shadow-inner">
+        <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+      </div>
+      <h3 class="text-xl font-black text-slate-900 mb-2" id="delete-modal-title">Delete Activation?</h3>
+      <p class="text-sm font-bold text-slate-500 mb-8" id="delete-modal-desc">This action cannot be undone. Are you sure you want to permanently remove this scheduled activity?</p>
+      <div class="flex gap-3 justify-center">
+        <button onclick="closeModal('modal-delete-confirm')" class="flex-1 px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-black hover:bg-slate-200 transition-colors">Cancel</button>
+        <button id="delete-modal-confirm-btn" onclick="executeDeleteAction()" class="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-black hover:bg-red-700 transition-colors shadow-md shadow-red-600/20">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-stores-analytics" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[105] flex items-center justify-center p-4 sm:p-6 opacity-0 modal-backdrop">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col transform scale-95 modal-panel overflow-hidden">
+      <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-white shrink-0">
+        <h2 class="text-xl font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-purple-600"></i> Store Utilization Analytics</h2>
+        <button onclick="closeModal('modal-stores-analytics')" class="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 w-10 h-10 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div class="p-6 overflow-y-auto bg-slate-50 flex-1">
+         <div class="mb-4 text-sm font-bold text-slate-500" id="stores-analytics-desc">Overview of unique branch locations currently assigned to scheduled activities.</div>
+         <div id="stores-analytics-content" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+           <!-- Rendered via JS -->
+         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="fixed top-24 right-4 sm:top-24 sm:right-8 z-[9999] flex flex-col gap-3 pointer-events-none [&>*]:pointer-events-auto items-end"></div>
+
+  <script>
+    const HARDCODED_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyA__IiXARXY7HGX4rOFmA7yFZr9F3ZMcHo",
+      authDomain: "in-store-activation.firebaseapp.com",
+      projectId: "in-store-activation",
+      storageBucket: "in-store-activation.firebasestorage.app",
+      messagingSenderId: "917509418366",
+      appId: "1:917509418366:web:4568c1ab74cd907ad0d72f",
+      measurementId: "G-6CSCTZYS53"
+    };
+
+    let db = null; let auth = null; let storage = null; let user = null;
+    let activations = []; let storeList = []; 
+    let currentActiveTab = 'dashboard';
+    let selectedStores = new Set();
+    let currentViewingActivation = null;
+    let uploadedImagesBase64 = [];
+    let savedPortalLogo = null;
+    let editingActivationId = null;
+    let activationToDelete = null;
+    let selectedActivations = new Set();
+    let deleteActionMode = 'single';
+    let whitelistConfig = { mode: 'ALL', whitelistMap: { 'saad.naiem@gmail.com': true } };
+    let pendingWhitelistConfig = null;
+    let currentDashboardFilter = 'ALL';
+
+    const CatColors = {
+      'WELLNESS': 'bg-green-500/10 text-green-700 border-green-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(34,197,94,0.3)] font-black',
+      'BEAUTY': 'bg-purple-500/10 text-purple-700 border-purple-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(168,85,247,0.3)] font-black',
+      'PERSONAL CARE': 'bg-orange-500/10 text-orange-700 border-orange-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.3)] font-black',
+      'MOM AND BABY': 'bg-blue-500/10 text-blue-700 border-blue-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(59,130,246,0.3)] font-black'
+    };
+
+    function calculateOperationalDays(startStr, endStr) {
+      if(!startStr || !endStr) return { totalDays: 0, workingDays: 0 };
+      const s = new Date(startStr);
+      const e = new Date(endStr);
+      if(s > e) return { totalDays: 0, workingDays: 0 };
+      let total = 0; let working = 0;
+      let curr = new Date(s);
+      while(curr <= e) {
+        total++;
+        if(curr.getDay() !== 5) { working++; } 
+        curr.setDate(curr.getDate() + 1);
+      }
+      return { totalDays: total, workingDays: working };
+    }
+
+    function fmtDate(d) { 
+      return d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''; 
+    }
+    
+    function fmtTime(time24) {
+      if (!time24) return 'TBD';
+      const [h, m] = time24.split(':');
+      let hours = parseInt(h, 10);
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${hours}:${m} ${ampm}`;
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const isErr = type === 'error';
+      
+      toast.className = `flex items-center gap-4 px-5 py-4 rounded-2xl shadow-float text-slate-800 font-bold text-sm transition-all duration-300 transform translate-x-full opacity-0 bg-white/80 backdrop-blur-xl border ${isErr ? 'border-red-200 border-l-4 border-l-red-500' : 'border-emerald-200 border-l-4 border-l-emerald-500'}`;
+      
+      toast.innerHTML = `
+        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isErr ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'} shadow-inner">
+            <i class="fa-solid ${isErr ? 'fa-triangle-exclamation' : 'fa-check'} text-lg"></i>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-[10px] font-black ${isErr ? 'text-red-600' : 'text-emerald-600'} uppercase tracking-widest">${isErr ? 'Alert' : 'Success'}</span>
+          <span class="text-sm font-black text-slate-800 leading-tight mt-0.5">${message}</span>
+        </div>
+      `;
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-x-full', 'opacity-0');
+        toast.classList.add('translate-x-0', 'opacity-100');
+      });
+
+      setTimeout(() => {
+        toast.classList.remove('translate-x-0', 'opacity-100');
+        toast.classList.add('translate-x-full', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function initFirebase() {
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(HARDCODED_FIREBASE_CONFIG);
+        db = firebase.firestore();
+        auth = firebase.auth();
+        storage = firebase.storage();
+        showToast("Connected to Cloud Database", "success");
+        setupAuthListener();
+        fetchStores();
+        listenToActivations();
+        fetchWhitelistConfig();
+      } catch (err) {
+        console.error(err);
+        showToast("Firebase Error. Using local mode.", "error");
+        loadLocalData();
+      }
+    }
+
+    function fetchWhitelistConfig() {
+      if(!db) return;
+      db.collection('settings').doc('whitelist').onSnapshot(doc => {
+        if(doc.exists) {
+          whitelistConfig = doc.data();
+          if(!whitelistConfig.whitelistMap) whitelistConfig.whitelistMap = { 'saad.naiem@gmail.com': true };
+          if(!whitelistConfig.mode) whitelistConfig.mode = 'ALL';
+        }
+      }, err => console.warn("Whitelist fetch error:", err));
+    }
+
+    function setWhitelistMode(mode) {
+      if(pendingWhitelistConfig) pendingWhitelistConfig.mode = mode;
+      renderWhitelistUI();
+    }
+
+    function addWhitelistEmail() {
+      const input = document.getElementById('whitelist-email-input');
+      const email = input.value.trim().toLowerCase();
+      if(!email || !email.includes('@')) return showToast("Please enter a valid email address.", "error");
+      
+      if(!pendingWhitelistConfig.whitelistMap) pendingWhitelistConfig.whitelistMap = {};
+      pendingWhitelistConfig.whitelistMap[email] = true; 
+      input.value = '';
+      renderWhitelistUI();
+      showToast(`Added ${email}. Remember to click Save.`, "success");
+    }
+
+    function toggleWhitelistEmail(email) {
+      if(email === 'saad.naiem@gmail.com') return showToast("Cannot disable Master Administrator.", "error");
+      if(!pendingWhitelistConfig.whitelistMap) pendingWhitelistConfig.whitelistMap = {};
+      pendingWhitelistConfig.whitelistMap[email] = !pendingWhitelistConfig.whitelistMap[email];
+      renderWhitelistUI();
+    }
+
+    function saveWhitelistToDB() {
+      if(db) {
+        db.collection('settings').doc('whitelist').set(pendingWhitelistConfig, {merge: true})
+          .then(() => {
+            whitelistConfig = JSON.parse(JSON.stringify(pendingWhitelistConfig));
+            showToast("Access Settings successfully saved!", "success");
+          })
+          .catch(err => showToast("Failed to save settings: " + err.message, "error"));
+      } else {
+        whitelistConfig = JSON.parse(JSON.stringify(pendingWhitelistConfig));
+        showToast("Access Settings successfully saved! (Local Mode)", "success");
+      }
+    }
+
+    function renderWhitelistUI() {
+      if(!pendingWhitelistConfig) return;
+      const btnAll = document.getElementById('btn-mode-all');
+      const btnSpecific = document.getElementById('btn-mode-specific');
+      const container = document.getElementById('whitelist-container');
+      const listDiv = document.getElementById('whitelist-emails-list');
+
+      if (!btnAll || !btnSpecific) return;
+
+      if (pendingWhitelistConfig.mode === 'ALL') {
+        btnAll.className = "py-3 px-4 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2 bg-brand-800 text-white shadow-md border-brand-900";
+        btnSpecific.className = "py-3 px-4 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
+        container.classList.add('hidden');
+      } else {
+        btnAll.className = "py-3 px-4 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2 bg-white text-slate-700 border-slate-300 hover:bg-slate-50";
+        btnSpecific.className = "py-3 px-4 rounded-xl text-xs font-black border transition-all flex items-center justify-center gap-2 bg-brand-800 text-white shadow-md border-brand-900";
+        container.classList.remove('hidden');
+      }
+
+      if(!pendingWhitelistConfig.whitelistMap) pendingWhitelistConfig.whitelistMap = { 'saad.naiem@gmail.com': true };
+      const emailsArr = Object.keys(pendingWhitelistConfig.whitelistMap).sort();
+
+      listDiv.innerHTML = emailsArr.map(e => {
+        const isChecked = pendingWhitelistConfig.whitelistMap[e];
+        return `
+          <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200">
+            <span class="text-xs font-black text-slate-800 truncate pr-2">${e}</span>
+            <div class="flex items-center gap-2">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleWhitelistEmail('${e}')" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600"></div>
+              </label>
+              ${e === 'saad.naiem@gmail.com' ? '<span class="text-[9px] text-brand-700 font-extrabold uppercase">Master</span>' : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setupAuthListener() {
+      if(!auth) return;
+      auth.onAuthStateChanged(fbUser => {
+        const authSection = document.getElementById('auth-section');
+        const authWarning = document.getElementById('auth-warning');
+        const submitBtn = document.getElementById('btn-submit');
+        const wipeSection = document.getElementById('master-wipe-section');
+        const settingsBtn = document.getElementById('btn-portal-settings');
+        const exportBtn = document.getElementById('btn-export-csv');
+        const manageStoresBtn = document.getElementById('btn-manage-stores');
+
+        if (fbUser) {
+          const userEmail = (fbUser.email || '').toLowerCase();
+          const isMaster = (userEmail === 'saad.naiem@gmail.com');
+
+          if (whitelistConfig.mode === 'SPECIFIC' && !isMaster) {
+            const map = whitelistConfig.whitelistMap || {};
+            if (!map[userEmail]) {
+              auth.signOut().then(() => {
+                showToast("Access Denied: Your email is disabled or not authorized by Master Admin.", "error");
+              });
+              return;
+            }
+          }
+
+          user = fbUser;
+          localStorage.setItem('isa_uid', user.uid);
+          localStorage.setItem('isa_email', userEmail);
+          
+          authSection.innerHTML = `
+            <div class="flex items-center gap-3 bg-white border border-slate-200 py-1.5 px-3 rounded-xl shadow-sm">
+              <img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+user.email}" class="w-8 h-8 rounded-lg shadow-sm" alt="User">
+              <span class="text-sm font-black text-slate-900 hidden sm:block pr-2">${user.displayName || user.email.split('@')[0]}</span>
+              <div class="w-px h-5 bg-slate-200"></div>
+              <button onclick="auth.signOut()" class="text-slate-400 hover:text-red-600 transition-colors p-1.5" title="Sign Out">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              </button>
+            </div>
+          `;
+          
+          if(authWarning) authWarning.classList.add('hidden');
+          if(submitBtn) { submitBtn.disabled = false; checkStoreConflicts(); }
+          
+          if(isMaster) {
+            if(wipeSection) wipeSection.classList.remove('hidden');
+            if(settingsBtn) settingsBtn.classList.remove('hidden');
+            if(exportBtn) exportBtn.classList.remove('hidden');
+            if(manageStoresBtn) manageStoresBtn.classList.remove('hidden');
+          } else {
+            if(wipeSection) wipeSection.classList.add('hidden');
+            if(settingsBtn) settingsBtn.classList.add('hidden');
+            if(exportBtn) exportBtn.classList.add('hidden');
+            if(manageStoresBtn) manageStoresBtn.classList.add('hidden');
+          }
+        } else {
+          user = null;
+          localStorage.removeItem('isa_uid');
+          localStorage.removeItem('isa_email');
+
+          authSection.innerHTML = `
+            <button onclick="triggerGoogleLogin()" class="bg-brand-800 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-2 shadow-md">
+              <i class="fa-brands fa-google"></i> Sign In
+            </button>
+          `;
+          
+          if(authWarning) authWarning.classList.remove('hidden');
+          if(submitBtn) submitBtn.disabled = true;
+          if(wipeSection) wipeSection.classList.add('hidden');
+          if(settingsBtn) settingsBtn.classList.add('hidden');
+          if(exportBtn) exportBtn.classList.add('hidden');
+          if(manageStoresBtn) manageStoresBtn.classList.add('hidden');
+          
+          if(currentActiveTab === 'new') {
+            switchTab('dashboard');
+            showToast("You have been signed out. Access to booking forms is restricted.", "error");
+          }
+        }
+        if(currentActiveTab === 'dashboard') renderDashboard();
+      });
+    }
+
+    function triggerGoogleLogin() {
+      if (!auth) return showToast("Firebase not configured", "error");
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch(error => {
+        showToast("Sign in failed: " + error.message, "error");
+      });
+    }
+
+    function fetchStores() {
+      if (!db) return;
+      db.collection('stores').doc('directory').onSnapshot(doc => {
+        storeList = (doc.exists && doc.data().list) ? doc.data().list : [];
+        renderStoreCheckboxes();
+        if(typeof renderManageStoresList === 'function') renderManageStoresList();
+      });
+    }
+
+    function listenToActivations() {
+      if (!db) return;
+      db.collection('activations').onSnapshot(snapshot => {
+        activations = [];
+        snapshot.forEach(doc => activations.push({ id: doc.id, ...doc.data() }));
+        activations.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+        if(currentActiveTab === 'dashboard') renderDashboard();
+      });
+    }
+
+    function loadLocalData() {
+      storeList = JSON.parse(localStorage.getItem('isa_stores') || '[]');
+      activations = JSON.parse(localStorage.getItem('isa_activations') || '[]');
+      activations.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      renderStoreCheckboxes();
+      if(typeof renderManageStoresList === 'function') renderManageStoresList();
+      renderDashboard();
+    }
+
+    function addSingleStore() {
+      const input = document.getElementById('manual-store-input');
+      const val = input.value.trim();
+      if(!val) return showToast("Please enter a store name.", "error");
+      
+      const isDuplicate = storeList.some(s => s.toLowerCase() === val.toLowerCase());
+      if(isDuplicate) return showToast("Store already exists in directory.", "error");
+
+      storeList.push(val);
+      storeList.sort();
+      saveStoresToDB("Store added manually!");
+      input.value = '';
+    }
+
+    function bulkAddStores() {
+      const text = document.getElementById('bulk-store-input').value;
+      const newStores = text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+      if(newStores.length === 0) return showToast("No valid store names found.", "error");
+      
+      let addedCount = 0;
+      newStores.forEach(val => {
+        const isDuplicate = storeList.some(s => s.toLowerCase() === val.toLowerCase());
+        if(!isDuplicate) {
+          storeList.push(val);
+          addedCount++;
+        }
+      });
+      
+      if(addedCount > 0) {
+        storeList.sort();
+        saveStoresToDB(`${addedCount} stores bulk added!`);
+        document.getElementById('bulk-store-input').value = '';
+      } else {
+        showToast("No new stores added (all duplicates).", "error");
+      }
+    }
+
+    function renderManageStoresList() {
+      const listDiv = document.getElementById('manage-stores-list');
+      if(!listDiv) return;
+      if (storeList.length === 0) {
+        listDiv.innerHTML = '<div class="text-xs text-slate-500 font-bold p-2 text-center">No stores in directory.</div>';
+        return;
+      }
+      listDiv.innerHTML = storeList.map((st, idx) => `
+        <div class="flex items-center justify-between bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm" id="store-row-${idx}">
+          <span class="text-xs font-black text-slate-800 truncate flex-1 pr-2" title="${st}">${st}</span>
+          <div class="flex gap-2 shrink-0">
+            <button type="button" onclick="enableStoreEdit(${idx}, '${st.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-indigo-600 transition-colors bg-slate-100 hover:bg-indigo-50 w-7 h-7 rounded flex items-center justify-center"><i class="fa-solid fa-pen text-[10px]"></i></button>
+            <button type="button" onclick="deleteStore('${st.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-red-600 transition-colors bg-slate-100 hover:bg-red-50 w-7 h-7 rounded flex items-center justify-center"><i class="fa-solid fa-trash text-[10px]"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function enableStoreEdit(idx, oldName) {
+      const row = document.getElementById(`store-row-${idx}`);
+      row.innerHTML = `
+        <input type="text" id="edit-store-input-${idx}" value="${oldName}" class="flex-1 px-2 py-1.5 text-xs border border-brand-500 rounded outline-none font-black text-slate-900 shadow-inner mr-2 w-full">
+        <div class="flex gap-1 shrink-0">
+          <button type="button" onclick="saveStoreEdit('${oldName.replace(/'/g, "\\'")}', document.getElementById('edit-store-input-${idx}').value)" class="text-brand-600 hover:text-brand-800 bg-brand-50 w-7 h-7 rounded flex items-center justify-center"><i class="fa-solid fa-check text-[10px]"></i></button>
+          <button type="button" onclick="renderManageStoresList()" class="text-slate-500 hover:text-slate-700 bg-slate-200 w-7 h-7 rounded flex items-center justify-center"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+        </div>
+      `;
+    }
+
+    function saveStoreEdit(oldName, newName) {
+      newName = newName.trim();
+      if(!newName || newName === oldName) return renderManageStoresList();
+      
+      const isDuplicate = storeList.some(s => s.toLowerCase() === newName.toLowerCase());
+      if(isDuplicate) {
+         showToast("Store name already exists.", "error");
+         return renderManageStoresList();
+      }
+
+      const idx = storeList.indexOf(oldName);
+      if(idx !== -1) storeList[idx] = newName;
+      storeList.sort();
+      
+      if (selectedStores.has(oldName)) {
+        selectedStores.delete(oldName);
+        selectedStores.add(newName);
+      }
+      
+      if (db) {
+         activations.forEach(act => {
+            if (act.stores && act.stores.includes(oldName)) {
+               const updatedStores = act.stores.map(s => s === oldName ? newName : s);
+               db.collection('activations').doc(act.id).update({ stores: updatedStores });
+            }
+         });
+      } else {
+         activations.forEach(act => {
+            if (act.stores && act.stores.includes(oldName)) {
+               act.stores = act.stores.map(s => s === oldName ? newName : s);
+            }
+         });
+         localStorage.setItem('isa_activations', JSON.stringify(activations));
+         if (currentActiveTab === 'dashboard') renderDashboard();
+      }
+
+      saveStoresToDB("Store name updated across database!");
+    }
+
+    function deleteStore(storeName) {
+      storeList = storeList.filter(s => s !== storeName);
+      selectedStores.delete(storeName);
+      saveStoresToDB("Store deleted.");
+    }
+
+    function switchTab(tabId) {
+      if (tabId === 'new' && (!user && db)) {
+        showToast("Authentication Required. Please sign in to book space.", "error");
+        return;
+      }
+      currentActiveTab = tabId;
+
+      const icons = {
+        'dashboard': { class: 'fa-chart-pie', color: 'text-blue-500', hover: 'group-hover:text-blue-600' },
+        'new': { class: 'fa-calendar-plus', color: 'text-emerald-500', hover: 'group-hover:text-emerald-600' },
+        'free-busy': { class: 'fa-map-location-dot', color: 'text-purple-500', hover: 'group-hover:text-purple-600' }
+      };
+
+      ['dashboard', 'new', 'free-busy'].forEach(id => {
+        const view = document.getElementById(`view-${id}`);
+        const btn = document.getElementById(`tab-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        
+        view.classList.add('hidden');
+        view.classList.remove('fade-in');
+        
+        btn.className = `flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all text-slate-500 hover:text-slate-800 hover:bg-white flex justify-center items-center shrink-0 border border-transparent group shadow-sm`;
+        
+        icon.className = `fa-solid ${icons[id].class} transition-colors ${icons[id].color} ${icons[id].hover}`;
+      });
+      
+      const activeView = document.getElementById(`view-${tabId}`);
+      activeView.classList.remove('hidden');
+      void activeView.offsetWidth; 
+      activeView.classList.add('fade-in');
+
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      activeBtn.className = `flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all shadow-md text-white flex justify-center items-center shrink-0 border border-transparent bg-brand-600 group`;
+      
+      const activeIcon = document.getElementById(`icon-${tabId}`);
+      activeIcon.className = `fa-solid ${icons[tabId].class} text-white transition-colors`;
+
+      if (tabId === 'dashboard') renderDashboard();
+    }
+
+    function highlightCard(cardId) {
+      const cTotal = document.getElementById('card-total');
+      const cActive = document.getElementById('card-active');
+      const cStores = document.getElementById('card-stores');
+      
+      if (cTotal) cTotal.classList.remove('ring-4', 'ring-blue-400', 'ring-blue-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(59,130,246,0.6)]', 'shadow-[0_0_25px_rgba(59,130,246,0.5)]', 'z-20');
+      if (cActive) cActive.classList.remove('ring-4', 'ring-emerald-400', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(16,185,129,0.6)]', 'shadow-[0_0_25px_rgba(16,185,129,0.5)]', 'z-20');
+      if (cStores) cStores.classList.remove('ring-4', 'ring-purple-400', 'ring-purple-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(168,85,247,0.6)]', 'shadow-[0_0_25px_rgba(168,85,247,0.5)]', 'z-20');
+
+      if (cardId === 'card-total' && cTotal) cTotal.classList.add('ring-4', 'ring-blue-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(59,130,246,0.5)]', 'z-20');
+      if (cardId === 'card-active' && cActive) cActive.classList.add('ring-4', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(16,185,129,0.5)]', 'z-20');
+      if (cardId === 'card-stores' && cStores) cStores.classList.add('ring-4', 'ring-purple-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(168,85,247,0.5)]', 'z-20');
+    }
+
+    function setDashboardFilter(filter) {
+      currentDashboardFilter = filter;
+      if (filter === 'ALL') highlightCard('card-total');
+      if (filter === 'ACTIVE') highlightCard('card-active');
+      renderDashboard();
+    }
+
+    function showStoresAnalytics() {
+      highlightCard('card-stores');
+      let storeData = {};
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      let relevantActivations = activations;
+      if (currentDashboardFilter === 'ACTIVE') {
+          relevantActivations = activations.filter(a => {
+              const s = new Date(a.startDate); s.setHours(0,0,0,0);
+              const e = new Date(a.endDate); e.setHours(23,59,59,999);
+              return now >= s && now <= e;
+          });
+      }
+
+      relevantActivations.forEach(act => {
+          if(act.stores) {
+              act.stores.forEach(s => {
+                  if (!storeData[s]) storeData[s] = [];
+                  storeData[s].push(act);
+              });
+          }
+      });
+      const sortedStores = Object.entries(storeData).sort((a,b) => b[1].length - a[1].length);
+      
+      const container = document.getElementById('stores-analytics-content');
+      document.getElementById('stores-analytics-desc').innerText = currentDashboardFilter === 'ACTIVE' 
+          ? "Overview of unique branch locations currently assigned to ACTIVE activities today." 
+          : "Overview of unique branch locations currently assigned to scheduled activities.";
+
+      if (sortedStores.length === 0) {
+          container.innerHTML = `<div class="col-span-1 sm:col-span-2 text-center text-slate-500 font-bold p-8 border-2 border-dashed border-slate-200 rounded-xl">No branches currently assigned to activities in this view.</div>`;
+      } else {
+          container.innerHTML = sortedStores.map(([store, acts], idx) => {
+              const uniqueBrands = [...new Set(acts.map(a => a.brandName))];
+              const displayBrands = uniqueBrands.slice(0, 3);
+              const extraCount = uniqueBrands.length > 3 ? uniqueBrands.length - 3 : 0;
+              const brandBadges = displayBrands.map(b => `<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[9px] px-1.5 py-0.5 rounded uppercase font-black shrink-0">${b}</span>`).join('');
+              const extraBadge = extraCount > 0 ? `<span class="text-[9px] text-slate-400 font-bold ml-1">+${extraCount} more</span>` : '';
+
+              const actsListHtml = acts.map(a => `
+                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col gap-1.5 cursor-pointer hover:bg-slate-200 transition-colors shadow-sm" onclick="closeModal('modal-stores-analytics'); viewDetails('${a.id}')">
+                    <div class="flex items-start justify-between gap-2">
+                       <span class="text-xs font-black text-slate-900 leading-tight">${a.activityName}</span>
+                       <span class="text-[9px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0 uppercase">${a.brandName}</span>
+                    </div>
+                    <div class="text-[10px] font-bold text-slate-600 flex items-center gap-1.5"><i class="fa-regular fa-calendar text-slate-400"></i>${fmtDate(a.startDate)} to ${fmtDate(a.endDate)}</div>
+                 </div>
+              `).join('');
+              
+              return `
+              <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow col-span-1 sm:col-span-2">
+                 <div class="p-4 flex justify-between items-center cursor-pointer bg-white gap-2" onclick="document.getElementById('store-drilldown-${idx}').classList.toggle('hidden'); this.querySelector('.fa-chevron-down').classList.toggle('rotate-180')">
+                     <div class="flex items-center gap-3 overflow-hidden">
+                         <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-shop text-xs"></i></div>
+                         <span class="font-black text-slate-800 text-sm truncate">${store}</span>
+                         <div class="hidden sm:flex items-center gap-1 shrink-0 ml-2">${brandBadges}${extraBadge}</div>
+                     </div>
+                     <div class="flex items-center gap-3 shrink-0">
+                       <span class="bg-purple-100 text-purple-800 font-black text-xs px-2.5 py-1 rounded-lg border border-purple-200">${acts.length} Activity(s)</span>
+                       <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-300"></i>
+                     </div>
+                 </div>
+                 <div class="px-4 pb-3 sm:hidden flex items-center gap-1 flex-wrap cursor-pointer" onclick="document.getElementById('store-drilldown-${idx}').classList.toggle('hidden'); this.parentElement.querySelector('.fa-chevron-down').classList.toggle('rotate-180')">
+                     ${brandBadges}${extraBadge}
+                 </div>
+                 <div id="store-drilldown-${idx}" class="hidden flex flex-col gap-2 p-3 border-t border-slate-100 bg-slate-50/50">
+                    <p class="text-[10px] uppercase font-black text-slate-500 tracking-wider mb-1 px-1">Assigned Campaigns</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${actsListHtml}
+                    </div>
+                 </div>
+              </div>
+          `}).join('');
+      }
+      openModal('modal-stores-analytics');
+    }
+
+    function saveStoresToDB(msg) {
+      if(db) {
+        db.collection('stores').doc('directory').set({list: storeList}, {merge: true})
+          .then(() => {
+             showToast(msg, "success");
+             if(typeof renderManageStoresList === 'function') renderManageStoresList();
+          })
+          .catch(e => showToast("Failed to save: " + e.message, "error"));
+      } else {
+         localStorage.setItem('isa_stores', JSON.stringify(storeList));
+         renderStoreCheckboxes();
+         renderManageStoresList();
+         showToast(msg + " (Local)", "success");
+      }
+    }
+
+    function renderStoreCheckboxes() {
+      const container = document.getElementById('store-checkbox-container');
+      const search = (document.getElementById('store-search-input').value || '').toLowerCase();
+      
+      if (storeList.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold text-sm">Directory empty. Use 'Add / Import Stores'.</div>`;
+        return;
+      }
+
+      const filtered = storeList.filter(s => s.toLowerCase().includes(search));
+      container.innerHTML = filtered.map(store => `
+        <label class="flex items-center gap-3 p-3 hover:bg-white rounded-xl cursor-pointer transition-all border border-transparent hover:border-slate-200 mb-1 hover:shadow-sm">
+          <input type="checkbox" value="${store}" onchange="toggleStore(this)" ${selectedStores.has(store) ? 'checked' : ''} class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+          <span class="text-sm text-slate-900 font-black">${store}</span>
+        </label>
+      `).join('');
+      
+      updateStoreCount();
+    }
+
+    function toggleStore(checkbox) {
+      const storeVal = checkbox.value;
+      if (checkbox.checked) {
+        const startInput = document.getElementById('f-startDate').value;
+        const endInput = document.getElementById('f-endDate').value;
+        
+        if (startInput && endInput) {
+            const newStart = new Date(startInput);
+            const newEnd = new Date(endInput);
+            let hasConflict = false;
+            let conflictAct = null;
+            
+            for (const act of activations) {
+                if (editingActivationId === act.id) continue;
+                const actStart = new Date(act.startDate);
+                const actEnd = new Date(act.endDate);
+                if (newStart <= actEnd && newEnd >= actStart) {
+                    if (act.stores && act.stores.includes(storeVal)) {
+                        hasConflict = true;
+                        conflictAct = act;
+                        break;
+                    }
+                }
+            }
+
+            if (hasConflict) {
+                checkbox.checked = false;
+                showToast(`Collision: "${storeVal}" is already booked for "${conflictAct.activityName}"`, "error");
+                return;
+            }
+        }
+        selectedStores.add(storeVal);
+      } else {
+        selectedStores.delete(storeVal);
+      }
+      updateStoreCount();
+      checkStoreConflicts();
+    }
+
+    function updateStoreCount() {
+      const counter = document.getElementById('store-selection-count');
+      counter.innerText = `${selectedStores.size} Selected`;
+      counter.className = selectedStores.size > 0 
+        ? "inline-flex items-center px-3 py-1 rounded-lg text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300" 
+        : "inline-flex items-center px-3 py-1 rounded-lg text-xs font-black bg-slate-200 text-slate-800";
+    }
+
+    function checkStoreConflicts() {
+      const alertBox = document.getElementById('conflict-alert');
+      const submitBtn = document.getElementById('btn-submit');
+      const startInput = document.getElementById('f-startDate').value;
+      const endInput = document.getElementById('f-endDate').value;
+      
+      alertBox.classList.add('hidden');
+      alertBox.innerHTML = '';
+      if(user || !db) submitBtn.disabled = false;
+
+      if (!startInput || !endInput || selectedStores.size === 0) return;
+
+      const newStart = new Date(startInput);
+      const newEnd = new Date(endInput);
+      
+      if (newStart > newEnd) {
+        alertBox.innerHTML = `<div class="text-sm text-red-900 font-black">Start date cannot be after end date.</div>`;
+        alertBox.classList.remove('hidden');
+        submitBtn.disabled = true;
+        return;
+      }
+
+      let conflicts = [];
+      activations.forEach(act => {
+        if (editingActivationId === act.id) return;
+        const actStart = new Date(act.startDate);
+        const actEnd = new Date(act.endDate);
+        if (newStart <= actEnd && newEnd >= actStart) {
+          act.stores.forEach(store => {
+            if (selectedStores.has(store)) conflicts.push({ store, act });
+          });
+        }
+      });
+
+      if (conflicts.length > 0) {
+        conflicts.forEach(c => {
+           selectedStores.delete(c.store);
+           const cb = document.querySelector(`input[type="checkbox"][value="${c.store}"]`);
+           if(cb) cb.checked = false;
+        });
+        updateStoreCount();
+        showToast(`Date changed: Removed ${conflicts.length} store(s) due to collision!`, "error");
+      }
+    }
+
+    document.getElementById('f-image').addEventListener('change', async function(e) {
+      const files = e.target.files;
+      if(!files || files.length === 0) return;
+
+      showToast(`Processing ${files.length} image(s)...`, "success");
+
+      for(let i=0; i < files.length; i++) {
+        const file = files[i];
+        const base64 = await processImageFile(file);
+        if (base64) uploadedImagesBase64.push(base64);
+      }
+      renderImageGallery();
+      this.value = '';
+    });
+
+    function processImageFile(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = ev => {
+          const img = new Image();
+          img.src = ev.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+            const MAX = 700;
+            if (w > h && w > MAX) { h *= MAX / w; w = MAX; } 
+            else if (h > MAX) { w *= MAX / h; h = MAX; }
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.6));
+          };
+          img.onerror = () => resolve(null);
+        };
+      });
+    }
+
+    function renderImageGallery() {
+      const gallery = document.getElementById('image-preview-gallery');
+      if (uploadedImagesBase64.length === 0) {
+        gallery.innerHTML = '';
+        return;
+      }
+      gallery.innerHTML = uploadedImagesBase64.map((b64, idx) => `
+        <div class="relative w-24 h-24 rounded-xl border border-slate-300 overflow-hidden shadow-sm group">
+          <img src="${b64}" class="w-full h-full object-cover">
+          <button type="button" onclick="removeImage(${idx})" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeImage(idx) {
+      uploadedImagesBase64.splice(idx, 1);
+      renderImageGallery();
+    }
+
+    async function handleActivationSubmit(e) {
+      e.preventDefault();
+      if (!user && db) return showToast("Sign in required.", "error");
+      if (selectedStores.size === 0) return showToast("Select at least one store.", "error");
+
+      const btn = document.getElementById('btn-submit');
+      const origHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
+
+      const data = {
+        activityName: document.getElementById('f-activityName').value,
+        brandName: document.getElementById('f-brandName').value,
+        vendorName: document.getElementById('f-vendorName').value,
+        category: document.getElementById('f-category').value,
+        activityType: document.getElementById('f-activityType').value,
+        objective: document.getElementById('f-objective').value,
+        description: document.getElementById('f-description').value,
+        startDate: document.getElementById('f-startDate').value,
+        endDate: document.getElementById('f-endDate').value,
+        startTime: document.getElementById('f-startTime').value,
+        endTime: document.getElementById('f-endTime').value,
+        stores: Array.from(selectedStores),
+        images: uploadedImagesBase64
+      };
+
+      try {
+        if (editingActivationId) {
+          if (db) {
+            await db.collection('activations').doc(editingActivationId).set(data, { merge: true });
+          } else {
+            const idx = activations.findIndex(a => a.id === editingActivationId);
+            if (idx > -1) {
+              activations[idx] = { ...activations[idx], ...data };
+              localStorage.setItem('isa_activations', JSON.stringify(activations));
+            }
+          }
+          showToast("Activation Saved Successfully!", "success");
+        } else {
+          data.authorId = user ? user.uid : 'local';
+          data.authorEmail = user ? user.email.toLowerCase() : '';
+          data.authorName = user ? (user.displayName || user.email.split('@')[0]) : "Local User";
+          data.createdAt = new Date().toISOString();
+          
+          if (db) await db.collection('activations').add(data);
+          else {
+            data.id = 'loc-' + Date.now();
+            activations.unshift(data);
+            localStorage.setItem('isa_activations', JSON.stringify(activations));
+          }
+          showToast("Activation Scheduled!", "success");
+        }
+        cancelEdit();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+      }
+    }
+
+    function cancelEdit() {
+      editingActivationId = null;
+      document.getElementById('activation-form').reset();
+      selectedStores.clear();
+      uploadedImagesBase64 = [];
+      renderImageGallery();
+      renderStoreCheckboxes();
+      
+      const btnSubmit = document.getElementById('btn-submit');
+      btnSubmit.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Confirm & Schedule';
+      btnSubmit.disabled = false;
+      document.getElementById('btn-cancel-edit').classList.add('hidden');
+      document.getElementById('form-section-title').innerText = "Book Activity";
+      
+      switchTab('dashboard');
+    }
+
+    function toggleSelectAll(masterCheckbox) {
+      const search = (document.getElementById('search-dashboard').value || '').toLowerCase();
+      const filtered = activations.filter(a => {
+        const fullTextStr = `${a.activityName} ${a.brandName} ${a.vendorName} ${a.category} ${a.activityType} ${a.startDate} ${a.endDate} ${(a.stores || []).join(' ')}`.toLowerCase();
+        return fullTextStr.includes(search);
+      });
+
+      if (masterCheckbox.checked) {
+        filtered.forEach(a => selectedActivations.add(a.id));
+      } else {
+        filtered.forEach(a => selectedActivations.delete(a.id));
+      }
+      renderDashboard();
+    }
+
+    function toggleRowSelection(checkbox, id) {
+      if (checkbox.checked) {
+        selectedActivations.add(id);
+      } else {
+        selectedActivations.delete(id);
+      }
+      updateBulkActionBar();
+    }
+
+    function updateBulkActionBar() {
+      const bulkBar = document.getElementById('master-bulk-actions');
+      const countSpan = document.getElementById('selected-count');
+      if (selectedActivations.size > 0) {
+        bulkBar.classList.remove('hidden');
+        bulkBar.classList.add('flex');
+        countSpan.innerText = selectedActivations.size;
+      } else {
+        bulkBar.classList.remove('flex');
+        bulkBar.classList.add('hidden');
+      }
+
+      const search = (document.getElementById('search-dashboard').value || '').toLowerCase();
+      const filtered = activations.filter(a => {
+        const fullTextStr = `${a.activityName} ${a.brandName} ${a.vendorName} ${a.category} ${a.activityType} ${a.startDate} ${a.endDate} ${(a.stores || []).join(' ')}`.toLowerCase();
+        return fullTextStr.includes(search);
+      });
+      const masterCb = document.getElementById('select-all-checkbox');
+      if (filtered.length > 0 && filtered.every(a => selectedActivations.has(a.id))) {
+        masterCb.checked = true;
+      } else {
+        masterCb.checked = false;
+      }
+    }
+
+    function promptDeleteSelected() {
+      if(selectedActivations.size === 0) return;
+      
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid') || 'local';
+      const isMasterAdmin = (cachedEmail === 'saad.naiem@gmail.com');
+      
+      let unauthorizedCount = 0;
+      activations.forEach(act => {
+        if(selectedActivations.has(act.id)) {
+           const isAuthor = (cachedUid === (act.authorId || 'local') || (act.authorEmail && cachedEmail === act.authorEmail.toLowerCase()));
+           if(!isMasterAdmin && !isAuthor) unauthorizedCount++;
+        }
+      });
+      
+      if(unauthorizedCount > 0) {
+         showToast(`Access Denied: ${unauthorizedCount} selected activity(ies) do not belong to you.`, "error");
+         return;
+      }
+
+      deleteActionMode = 'selected';
+      document.getElementById('delete-modal-title').innerText = `Delete ${selectedActivations.size} Activity(ies)?`;
+      document.getElementById('delete-modal-desc').innerText = `Are you sure you want to permanently remove the ${selectedActivations.size} selected scheduled activities?`;
+      openModal('modal-delete-confirm');
+    }
+
+    function promptWipeAll() {
+      deleteActionMode = 'wipe-all';
+      document.getElementById('delete-modal-title').innerText = "Wipe Entire Database?";
+      document.getElementById('delete-modal-desc').innerText = "WARNING: This will permanently erase ALL scheduled activations across the entire system. This action cannot be undone.";
+      openModal('modal-delete-confirm');
+    }
+
+    async function executeDeleteAction() {
+      try {
+        if (deleteActionMode === 'single') {
+          if (!activationToDelete) return;
+          
+          const rowElement = document.getElementById(`row-${activationToDelete}`);
+          if (rowElement) rowElement.remove();
+          
+          if (db) await db.collection('activations').doc(activationToDelete).delete();
+          else {
+            activations = activations.filter(a => a.id !== activationToDelete);
+            localStorage.setItem('isa_activations', JSON.stringify(activations));
+          }
+          showToast("Activation deleted successfully.", "success");
+        } else if (deleteActionMode === 'selected') {
+          const idsToDelete = Array.from(selectedActivations);
+          
+          idsToDelete.forEach(id => {
+            const rowElement = document.getElementById(`row-${id}`);
+            if(rowElement) rowElement.remove();
+          });
+          
+          if (db) {
+            const batch = db.batch();
+            idsToDelete.forEach(id => {
+              batch.delete(db.collection('activations').doc(id));
+            });
+            await batch.commit();
+          } else {
+            activations = activations.filter(a => !selectedActivations.has(a.id));
+            localStorage.setItem('isa_activations', JSON.stringify(activations));
+          }
+          selectedActivations.clear();
+          showToast(`${idsToDelete.length} activities deleted successfully.`, "success");
+        } else if (deleteActionMode === 'wipe-all') {
+          document.getElementById('dashboard-table-body').innerHTML = '';
+          
+          if (db) {
+            const snapshot = await db.collection('activations').get();
+            const batch = db.batch();
+            snapshot.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+          } else {
+            activations = [];
+            localStorage.removeItem('isa_activations');
+          }
+          selectedActivations.clear();
+          showToast("All activations wiped successfully.", "success");
+        }
+
+        closeModal('modal-delete-confirm');
+        closeModal('modal-details');
+        if (currentActiveTab === 'dashboard') renderDashboard();
+      } catch (err) {
+        showToast("Error performing deletion: " + err.message, "error");
+      }
+    }
+
+    function renderDashboard() {
+      const search = (document.getElementById('search-dashboard').value || '').toLowerCase();
+      
+      let filtered = activations.filter(a => {
+        const fullTextStr = `${a.activityName} ${a.brandName} ${a.vendorName} ${a.category} ${a.activityType} ${a.startDate} ${a.endDate} ${(a.stores || []).join(' ')}`.toLowerCase();
+        return fullTextStr.includes(search);
+      });
+
+      document.getElementById('metric-total').innerText = activations.length;
+      
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      const activeCount = activations.filter(a => {
+         const s = new Date(a.startDate); s.setHours(0,0,0,0);
+         const e = new Date(a.endDate); e.setHours(23,59,59,999);
+         return now >= s && now <= e;
+      }).length;
+      document.getElementById('metric-active').innerText = activeCount;
+
+      let uniqueStoresSet = new Set();
+      if (currentDashboardFilter === 'ACTIVE') {
+          const activeFiltered = filtered.filter(a => {
+              const s = new Date(a.startDate); s.setHours(0,0,0,0);
+              const e = new Date(a.endDate); e.setHours(23,59,59,999);
+              return now >= s && now <= e;
+          });
+          activeFiltered.forEach(a => { if(a.stores) a.stores.forEach(st => uniqueStoresSet.add(st)); });
+          filtered = activeFiltered; 
+      } else {
+          filtered.forEach(a => { if(a.stores) a.stores.forEach(st => uniqueStoresSet.add(st)); });
+      }
+
+      document.getElementById('metric-stores').innerText = uniqueStoresSet.size;
+
+      const tbody = document.getElementById('dashboard-table-body');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        document.getElementById('dashboard-empty-state').classList.remove('hidden');
+        updateBulkActionBar();
+        return;
+      }
+      
+      document.getElementById('dashboard-empty-state').classList.add('hidden');
+      
+      const sortedFiltered = filtered.sort((a, b) => {
+        const aStart = new Date(a.startDate); const aEnd = new Date(a.endDate);
+        const bStart = new Date(b.startDate); const bEnd = new Date(b.endDate);
+        
+        aStart.setHours(0,0,0,0); aEnd.setHours(23,59,59,999);
+        bStart.setHours(0,0,0,0); bEnd.setHours(23,59,59,999);
+        
+        const aActive = (now >= aStart && now <= aEnd);
+        const bActive = (now >= bStart && now <= bEnd);
+        
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+        return aStart - bStart;
+      });
+
+      tbody.innerHTML = sortedFiltered.map(act => {
+        const catBadge = CatColors[act.category] || 'bg-slate-100 text-slate-900 border-slate-300 font-black';
+        
+        const RowColors = {
+          'WELLNESS': 'bg-green-50/60 hover:bg-green-100',
+          'BEAUTY': 'bg-purple-50/60 hover:bg-purple-100',
+          'PERSONAL CARE': 'bg-orange-50/60 hover:bg-orange-100',
+          'MOM AND BABY': 'bg-blue-50/60 hover:bg-blue-100'
+        };
+        const rowColorClass = RowColors[act.category] || 'bg-white hover:bg-slate-50';
+
+        const firstImage = (act.images && act.images.length > 0) ? act.images[0] : (act.image ? act.image : null);
+        const imageThumbHtml = firstImage 
+          ? `<img src="${firstImage}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-slate-300 shrink-0">` 
+          : `<div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shadow-inner shrink-0"><i class="fa-solid fa-image"></i></div>`;
+
+        const daysCalc = calculateOperationalDays(act.startDate, act.endDate);
+        const sessionsPerStore = daysCalc.workingDays;
+        const totalSessions = sessionsPerStore * (act.stores ? act.stores.length : 0);
+
+        const storesTags = (act.stores || []).map(s => `
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-black bg-white text-slate-900 border border-slate-300 shadow-xs">
+            <i class="fa-solid fa-location-dot mr-1 text-brand-600"></i> <span class="truncate max-w-[180px]">${s}</span> <span class="text-blue-600 ml-1">(${sessionsPerStore} Sessions)</span>
+          </span>
+        `).join('');
+
+        const isSelected = selectedActivations.has(act.id);
+        
+        const startDateObj = new Date(act.startDate);
+        const endDateObj = new Date(act.endDate);
+        startDateObj.setHours(0,0,0,0);
+        endDateObj.setHours(23,59,59,999);
+        const isActiveNow = (now >= startDateObj && now <= endDateObj);
+
+        return `
+          <tr id="row-${act.id}" class="${rowColorClass} transition-colors cursor-pointer" onclick="viewDetails('${act.id}')">
+            <td class="px-4 py-5 border-b border-slate-100 w-[5%] text-center" onclick="event.stopPropagation()">
+              <input type="checkbox" onchange="toggleRowSelection(this, '${act.id}')" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[25%]">
+              <div class="flex items-center gap-4">
+                ${imageThumbHtml}
+                <div>
+                  <div class="flex flex-col items-start gap-1">
+                    <div class="font-black text-slate-900 text-base leading-tight">${act.activityName}</div>
+                    ${isActiveNow ? `
+                      <div class="flex items-center gap-3 mt-2">
+                         <div class="relative flex h-5 w-5 shrink-0 ml-1">
+                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                           <span class="relative inline-flex rounded-full h-5 w-5 bg-emerald-500"></span>
+                         </div>
+                         <div class="flex flex-col">
+                           <span class="text-[11px] font-black text-emerald-800 uppercase tracking-widest leading-none">Active</span>
+                           <span class="text-[10px] font-bold text-slate-600 mt-1">${fmtTime(act.startTime)} to ${fmtTime(act.endTime)}</span>
+                         </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div class="text-xs text-brand-700 font-black mt-2">${act.brandName} <span class="text-slate-300 mx-1">•</span> <span class="text-slate-700 font-extrabold">${act.vendorName}</span></div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[15%]">
+              <span class="inline-flex px-2.5 py-1 rounded-md text-[10px] border ${catBadge} uppercase tracking-wider">${act.category || '-'}</span>
+              <div class="text-[11px] text-slate-700 font-black mt-1">${act.activityType || '-'}</div>
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[20%]">
+              <div class="text-sm font-black text-slate-800"><i class="fa-solid fa-calendar-day text-slate-400 mr-1"></i> ${fmtDate(act.startDate)} to ${fmtDate(act.endDate)}</div>
+              <div class="flex flex-col items-start gap-1">
+                 <div class="inline-flex px-2.5 py-1 mt-2 bg-emerald-600 text-white text-[11px] font-black rounded shadow-sm">${daysCalc.workingDays} Days (Fridays Excluded)</div>
+                 <div class="inline-flex px-2.5 py-1 bg-white text-emerald-900 text-[11px] font-black rounded shadow-sm border border-emerald-200">Total Sessions: ${totalSessions}</div>
+              </div>
+              <div class="text-[11px] font-bold text-slate-600 mt-2"><i class="fa-regular fa-clock mr-1"></i> ${fmtTime(act.startTime)} to ${fmtTime(act.endTime)}</div>
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[25%]">
+              <div class="flex flex-wrap gap-1.5">${storesTags}</div>
+            </td>
+            <td class="px-6 py-5 text-right border-b border-slate-100 w-[10%]">
+              <button class="text-slate-900 font-black text-sm hover:text-white bg-white hover:bg-brand-800 border border-slate-300 hover:border-brand-800 shadow-sm px-4 py-2 rounded-xl transition-all">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateBulkActionBar();
+    }
+
+    function runFreeBusyCheck(isManualClick = false) {
+        const startInput = document.getElementById('fb-startDate').value;
+        const endInput = document.getElementById('fb-endDate').value;
+        const searchElement = document.getElementById('fb-search-store');
+        const searchInput = searchElement ? searchElement.value.toLowerCase() : '';
+
+        if (!startInput || !endInput) {
+            if (isManualClick) showToast("Please select both dates to check availability.", "error");
+            return;
+        }
+
+        const checkStart = new Date(startInput);
+        const checkEnd = new Date(endInput);
+
+        if (checkStart > checkEnd) {
+            if (isManualClick) showToast("Start date must be before end date.", "error");
+            return;
+        }
+
+        let storeBookingsMap = new Map();
+
+        activations.forEach(act => {
+            if (!act.startDate || !act.endDate) return;
+            const actStart = new Date(act.startDate);
+            const actEnd = new Date(act.endDate);
+            if (checkStart <= actEnd && checkEnd >= actStart) {
+                if (act.stores && Array.isArray(act.stores)) {
+                    act.stores.forEach(st => {
+                        if (!storeBookingsMap.has(st)) storeBookingsMap.set(st, []);
+                        storeBookingsMap.get(st).push({ start: actStart, end: actEnd, act });
+                    });
+                }
+            }
+        });
+
+        let freeStores = [];
+        let busyStores = [];
+
+        storeList.forEach(st => {
+            if (searchInput && !st.toLowerCase().includes(searchInput)) return;
+
+            if (storeBookingsMap.has(st)) {
+                const bookings = storeBookingsMap.get(st);
+                
+                let partialFreeIntervals = [];
+                let currDate = new Date(checkStart);
+                let freeBlockStart = null;
+
+                while(currDate <= checkEnd) {
+                    let isDayBlocked = false;
+                    for(const b of bookings) {
+                        if(currDate >= b.start && currDate <= b.end) {
+                            isDayBlocked = true;
+                            break;
+                        }
+                    }
+
+                    if(!isDayBlocked) {
+                        if(!freeBlockStart) freeBlockStart = new Date(currDate);
+                    } else {
+                        if(freeBlockStart) {
+                            partialFreeIntervals.push({ start: new Date(freeBlockStart), end: new Date(currDate.getTime() - 86400000) });
+                            freeBlockStart = null;
+                        }
+                    }
+                    currDate.setDate(currDate.getDate() + 1);
+                }
+                if(freeBlockStart) {
+                    partialFreeIntervals.push({ start: new Date(freeBlockStart), end: new Date(checkEnd) });
+                }
+
+                busyStores.push({ store: st, acts: bookings.map(b => b.act), freeIntervals: partialFreeIntervals });
+            } else {
+                freeStores.push({ store: st, isPartial: false });
+            }
+        });
+
+        document.getElementById('fb-free-count').innerText = freeStores.length;
+        document.getElementById('fb-busy-count').innerText = busyStores.length;
+
+        const freeList = document.getElementById('fb-free-list');
+        if (freeStores.length === 0) {
+            freeList.innerHTML = '<li class="p-10 text-slate-500 font-bold text-center text-sm">No fully available branches found for this search.</li>';
+        } else {
+            freeList.innerHTML = freeStores.map(item => {
+                const storeName = typeof item === 'string' ? item : item.store;
+                return `
+                    <li class="px-5 py-3 text-sm font-black text-slate-900 bg-white hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 flex flex-col">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-store text-emerald-600 text-xs"></i></div> 
+                            <span>${storeName}</span>
+                            <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] px-2 py-0.5 rounded font-black ml-auto">100% FREE</span>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        const busyList = document.getElementById('fb-busy-list');
+        if (busyStores.length === 0) {
+            busyList.innerHTML = '<li class="p-10 text-slate-500 font-bold text-center text-sm">No occupied branches found. All clear!</li>';
+        } else {
+            busyList.innerHTML = busyStores.map(b => {
+                const actsHtml = b.acts.map(act => `
+                    <div class="mt-2 bg-rose-50/80 rounded-xl p-3.5 border border-rose-100 shadow-sm ml-8 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-400"></div>
+                        <div class="text-xs text-rose-900 font-black uppercase tracking-wider">${act.brandName} <span class="text-rose-400 mx-1">•</span> ${act.activityName}</div>
+                        <div class="text-xs text-rose-700 mt-1.5 font-bold flex items-center gap-2">
+                           <i class="fa-regular fa-calendar-xmark text-rose-500"></i> ${fmtDate(act.startDate)} to ${fmtDate(act.endDate)}
+                        </div>
+                    </div>
+                `).join('');
+                
+                let freeHtml = '';
+                if (b.freeIntervals && b.freeIntervals.length > 0) {
+                    freeHtml = b.freeIntervals.map(iv => `
+                        <div class="mt-2 bg-emerald-50/80 rounded-xl p-3.5 border border-emerald-100 shadow-sm ml-8 relative overflow-hidden">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-emerald-400"></div>
+                            <div class="text-xs text-emerald-900 font-black uppercase tracking-wider">Available Slot</div>
+                            <div class="text-xs text-emerald-700 mt-1.5 font-bold flex items-center gap-2">
+                               <i class="fa-regular fa-calendar-check text-emerald-500"></i> ${fmtDate(iv.start)} to ${fmtDate(iv.end)}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                
+                return `
+                <li class="px-5 py-4 bg-white hover:bg-slate-50/50 transition-colors flex flex-col gap-1 border-b border-slate-100 last:border-0">
+                    <div class="flex items-center gap-3 text-sm font-black text-slate-900"><div class="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-store text-rose-600 text-xs"></i></div> ${b.store}</div>
+                    ${actsHtml}
+                    ${freeHtml}
+                </li>
+                `;
+            }).join('');
+        }
+    }
+
+    function viewDetails(id) {
+      currentViewingActivation = activations.find(a => a.id === id);
+      if(!currentViewingActivation) return;
+      const act = currentViewingActivation;
+      const catBadge = CatColors[act.category] || 'bg-slate-100 text-slate-900 border-slate-300 font-black';
+      
+      const actAuthorId = act.authorId || 'local'; 
+      const actAuthorEmail = (act.authorEmail || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid');
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const currentUserId = user ? user.uid : (cachedUid || 'local');
+      const currentUserEmail = user ? user.email.toLowerCase() : cachedEmail;
+      
+      const isMasterAdmin = (currentUserEmail === 'saad.naiem@gmail.com');
+      const isAuthor = (currentUserId === actAuthorId || (actAuthorEmail && currentUserEmail === actAuthorEmail));
+      const canManage = isMasterAdmin || isAuthor;
+
+      const btnEditClass = canManage 
+        ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100 cursor-pointer shadow-sm" 
+        : "bg-slate-100 text-slate-400 border border-slate-200 opacity-55 cursor-not-allowed";
+
+      const btnDeleteClass = canManage 
+        ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-100 cursor-pointer shadow-sm" 
+        : "bg-slate-100 text-slate-400 border border-slate-200 opacity-55 cursor-not-allowed";
+
+      const authorActionsHtml = `
+        <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-200">
+          <button onclick="attemptEdit()" class="${btnEditClass} px-5 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Booking ${!canManage ? '<i class="fa-solid fa-lock text-xs ml-1"></i>' : ''}
+          </button>
+          <button onclick="attemptDelete()" class="${btnDeleteClass} px-5 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-trash-can"></i> Delete ${!canManage ? '<i class="fa-solid fa-lock text-xs ml-1"></i>' : ''}
+          </button>
+        </div>
+      `;
+
+      const descriptionFormatted = (act.description || 'No additional details provided.').replace(/\n/g, '<br/>');
+      const objectiveFormatted = (act.objective || '-').replace(/\n/g, '<br/>');
+      
+      const daysCalc = calculateOperationalDays(act.startDate, act.endDate);
+      const sessionsPerStore = daysCalc.workingDays;
+      const totalSessions = sessionsPerStore * (act.stores ? act.stores.length : 0);
+
+      const storesListHtml = (act.stores || []).map(s => `
+        <li class="px-3.5 py-2.5 text-xs font-black text-slate-900 bg-white border border-slate-200 shadow-xs rounded-xl flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 truncate">
+             <i class="fa-solid fa-location-dot text-brand-600 shrink-0"></i> <span class="truncate">${s}</span>
+          </div>
+          <span class="text-blue-600 shrink-0 font-extrabold">(${sessionsPerStore} Sessions)</span>
+        </li>
+      `).join('');
+
+      document.getElementById('modal-details-content').innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 flex flex-col gap-6">
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 uppercase tracking-widest">Authorized</span>
+                <span class="text-xs text-brand-700 font-mono font-black border border-brand-300 bg-brand-50 px-2 py-0.5 rounded">REF: ${getActivationRefStr(act)}</span>
+              </div>
+              <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">${act.activityName}</h1>
+              ${authorActionsHtml}
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200"><p class="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1">Brand</p><p class="font-black text-sm text-slate-900">${act.brandName}</p></div>
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200"><p class="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1">Category</p><span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] border ${catBadge}">${act.category || '-'}</span></div>
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200"><p class="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1">Activity Type</p><p class="font-black text-sm text-slate-900">${act.activityType || '-'}</p></div>
+              <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-2xl shadow-sm border border-emerald-200">
+                <p class="text-[10px] text-emerald-800 uppercase font-black tracking-wider mb-1">Schedule Duration</p>
+                <p class="font-black text-sm text-slate-900 mb-2">${fmtDate(act.startDate)} to ${fmtDate(act.endDate)}</p>
+                <span class="inline-block bg-emerald-600 text-white text-[11px] font-black px-2 py-1 rounded shadow-sm">${daysCalc.workingDays} Days (Fridays Excluded)</span>
+                <span class="inline-block bg-white text-emerald-900 text-[11px] font-black px-2 py-1 rounded shadow-sm mt-1 border border-emerald-200">Total Sessions: ${totalSessions}</span>
+                <p class="text-[11px] font-bold text-emerald-700 mt-2"><i class="fa-regular fa-clock mr-1"></i> ${fmtTime(act.startTime)} to ${fmtTime(act.endTime)}</p>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <h3 class="font-black text-sm text-slate-900 border-b border-slate-200 pb-2 mb-3 uppercase tracking-wider text-brand-800">Activity Objective</h3>
+              <div class="text-sm text-slate-800 font-black leading-relaxed break-words">${objectiveFormatted}</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <h3 class="font-black text-sm text-slate-900 border-b border-slate-200 pb-2 mb-3 uppercase tracking-wider text-brand-800">Activity Details</h3>
+              <div class="text-sm text-slate-800 font-black leading-relaxed break-words">${descriptionFormatted}</div>
+            </div>
+            
+            ${(act.images || (act.image ? [act.image] : [])).length > 0 ? `
+              <div>
+                <h3 class="font-black text-sm text-slate-900 mb-3 uppercase tracking-wider text-brand-800">Attached Materials</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                   ${(act.images || (act.image ? [act.image] : [])).map(img => `<img src="${img}" class="w-full h-32 object-cover rounded-2xl border border-slate-300 shadow-sm cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open('${img}', '_blank')" alt="Material">`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-glass flex flex-col h-full max-h-[800px]">
+              <div class="p-5 border-b border-slate-200 bg-slate-50"><h3 class="font-black text-slate-900 text-sm uppercase tracking-wider">Confirmed Store Allocations (${act.stores ? act.stores.length : 0})</h3></div>
+              <div class="p-3 flex-1 overflow-y-auto"><ul class="space-y-2">${storesListHtml}</ul></div>
+            </div>
+          </div>
+        </div>
+      `;
+      openModal('modal-details');
+    }
+
+    function attemptEdit() {
+      if (!currentViewingActivation) return;
+      const act = currentViewingActivation;
+      const actAuthorId = act.authorId || 'local';
+      const actAuthorEmail = (act.authorEmail || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid');
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const currentUserId = user ? user.uid : (cachedUid || 'local');
+      const currentUserEmail = user ? user.email.toLowerCase() : cachedEmail;
+      
+      const isMasterAdmin = (currentUserEmail === 'saad.naiem@gmail.com');
+      const isAuthor = (currentUserId === actAuthorId || (actAuthorEmail && currentUserEmail === actAuthorEmail));
+
+      if (!isMasterAdmin && !isAuthor) {
+        showToast("Access Denied: Only the original creator or Master Admin can edit this activity.", "error");
+        return;
+      }
+      editActivation();
+    }
+
+    function editActivation() {
+      const act = currentViewingActivation;
+      editingActivationId = act.id;
+      
+      document.getElementById('f-activityName').value = act.activityName || '';
+      document.getElementById('f-brandName').value = act.brandName || '';
+      document.getElementById('f-vendorName').value = act.vendorName || '';
+      document.getElementById('f-category').value = act.category || '';
+      document.getElementById('f-activityType').value = act.activityType || '';
+      document.getElementById('f-objective').value = act.objective || '';
+      document.getElementById('f-description').value = act.description || '';
+      document.getElementById('f-startDate').value = act.startDate || '';
+      document.getElementById('f-endDate').value = act.endDate || '';
+      document.getElementById('f-startTime').value = act.startTime || '';
+      document.getElementById('f-endTime').value = act.endTime || '';
+      
+      selectedStores = new Set(act.stores || []);
+      uploadedImagesBase64 = [...(act.images || (act.image ? [act.image] : []))];
+      
+      renderStoreCheckboxes();
+      renderImageGallery();
+      
+      document.getElementById('btn-submit').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update & Save';
+      document.getElementById('btn-submit').disabled = false;
+      document.getElementById('btn-cancel-edit').classList.remove('hidden');
+      document.getElementById('form-section-title').innerText = "Edit Scheduled Space";
+      
+      closeModal('modal-details');
+      switchTab('new');
+    }
+
+    function attemptDelete() {
+      if (!currentViewingActivation) return;
+      const act = currentViewingActivation;
+      const actAuthorId = act.authorId || 'local';
+      const actAuthorEmail = (act.authorEmail || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid');
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const currentUserId = user ? user.uid : (cachedUid || 'local');
+      const currentUserEmail = user ? user.email.toLowerCase() : cachedEmail;
+      
+      const isMasterAdmin = (currentUserEmail === 'saad.naiem@gmail.com');
+      const isAuthor = (currentUserId === actAuthorId || (actAuthorEmail && currentUserEmail === actAuthorEmail));
+
+      if (!isMasterAdmin && !isAuthor) {
+        showToast("Access Denied: Only the original creator or Master Admin can delete this activity.", "error");
+        return;
+      }
+      activationToDelete = act.id;
+      deleteActionMode = 'single';
+      document.getElementById('delete-modal-title').innerText = "Delete Activation?";
+      document.getElementById('delete-modal-desc').innerText = "This action cannot be undone. Are you sure you want to permanently remove this scheduled activity?";
+      openModal('modal-delete-confirm');
+    }
+
+    async function getLogoBase64() {
+      if (savedPortalLogo) return savedPortalLogo;
+      if (db) {
+        try {
+          const doc = await db.collection('settings').doc('branding').get();
+          if (doc.exists && doc.data().logoBase64) {
+            savedPortalLogo = doc.data().logoBase64;
+            return savedPortalLogo;
+          }
+        } catch(e) { console.warn("Could not fetch logo:", e); }
+      }
+      const localLogo = localStorage.getItem('isa_logo');
+      if (localLogo) {
+        savedPortalLogo = localLogo;
+        return localLogo;
+      }
+      return null;
+    }
+
+    function getActivationRefStr(act) {
+      const dObj = act.createdAt ? new Date(act.createdAt) : new Date();
+      const yr = dObj.getFullYear();
+      const mo = String(dObj.getMonth() + 1).padStart(2, '0');
+      
+      const sameMonthActs = activations.filter(a => {
+        const ad = a.createdAt ? new Date(a.createdAt) : new Date();
+        return ad.getFullYear() === yr && ad.getMonth() === dObj.getMonth();
+      }).sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+      
+      const actIndex = sameMonthActs.findIndex(a => a.id === act.id);
+      const seqNum = String((actIndex !== -1 ? actIndex : 0) + 1).padStart(2, '0');
+      return `ACT-${yr}-${mo}-${seqNum}`;
+    }
+
+    async function previewPDF() {
+      const act = currentViewingActivation;
+      if (!act) return;
+      showToast("Generating live preview...", "success");
+
+      const logoB64 = await getLogoBase64();
+      const refStr = getActivationRefStr(act);
+      const printDateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const imagesList = act.images || (act.image ? [act.image] : []);
+      
+      const daysCalc = calculateOperationalDays(act.startDate, act.endDate);
+      const sessionsPerStore = daysCalc.workingDays;
+      const totalSessions = sessionsPerStore * (act.stores ? act.stores.length : 0);
+      
+      const descHtml = (act.description || 'No additional details provided.').replace(/\n/g, '<br/>');
+      const objHtml = (act.objective || '-').replace(/\n/g, '<br/>');
+
+      const previewContainer = document.getElementById('pdf-preview-container');
+      
+      previewContainer.innerHTML = `
+        <div class="flex flex-col min-h-[270mm] pb-6 border-b border-dashed border-slate-300">
+          <div class="shrink-0 flex justify-between items-start pb-4 border-b border-slate-200">
+            <div class="flex items-center gap-4">
+              ${logoB64 ? `<img src="${logoB64}" class="h-[48px] w-auto max-w-[200px] object-contain">` : `<div class="w-12 h-12 bg-[#2e7d32] rounded-xl flex items-center justify-center text-white font-black text-xl">H</div>`}
+            </div>
+            <div class="text-right">
+              <h3 class="font-black text-xl text-slate-900 tracking-wider">IN-STORE ACTIVATION APPROVAL</h3>
+              <p class="text-sm font-black text-brand-700 mt-1">REF: <span class="text-brand-800 font-extrabold">${refStr}</span> | Date: ${printDateStr}</p>
+            </div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 mt-5">
+            <h1 class="text-3xl font-black text-slate-900">${act.activityName}</h1>
+            <p class="text-sm font-black text-brand-800 uppercase tracking-widest">BRAND: ${act.brandName}</p>
+            <div class="grid grid-cols-2 gap-5 pt-2 text-base">
+              <div><strong class="text-slate-500 text-xs block mb-1">Product Category:</strong> <span class="font-black text-slate-900">${act.category || '-'}</span></div>
+              <div><strong class="text-slate-500 text-xs block mb-1">Vendor / Partner:</strong> <span class="font-black text-slate-900">${act.vendorName || '-'}</span></div>
+              <div><strong class="text-slate-500 text-xs block mb-1">Activity Type:</strong> <span class="font-black text-slate-900">${act.activityType || '-'}</span></div>
+              <div>
+                <strong class="text-slate-500 text-xs block mb-1">Schedule Duration:</strong> 
+                <span class="font-black text-brand-700 block">${fmtDate(act.startDate)} to ${fmtDate(act.endDate)}</span>
+                <span class="inline-block bg-emerald-600 text-white text-xs font-black px-2 py-1 rounded shadow-sm mt-2">${daysCalc.workingDays} Days (Fridays Excluded)</span>
+                <span class="text-sm font-extrabold text-slate-600 block mt-2"><i class="fa-regular fa-clock"></i> ${fmtTime(act.startTime)} to ${fmtTime(act.endTime)}</span>
+              </div>
+              <div><strong class="text-slate-500 text-xs block mb-1">Total Sessions:</strong> <span class="font-black text-slate-900">${totalSessions} (${sessionsPerStore} per store)</span></div>
+            </div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 mt-4">
+            <h4 class="text-sm font-black text-brand-800 uppercase tracking-widest">Activity Objective</h4>
+            <div class="text-base font-black text-slate-800 leading-relaxed break-words">${objHtml}</div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 mt-4">
+            <h4 class="text-sm font-black text-brand-800 uppercase tracking-widest">Activity Details</h4>
+            <div class="text-base font-black text-slate-800 leading-relaxed break-words">${descHtml}</div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col mt-4">
+            <h4 class="text-sm font-black text-brand-800 uppercase tracking-widest shrink-0 mb-3">CONFIRMED STORE ALLOCATIONS (${act.stores ? act.stores.length : 0})</h4>
+            <ul class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm font-black text-slate-900 overflow-hidden content-start">
+              ${(act.stores || []).map(s => `<li class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2 truncate"><div class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-location-dot text-brand-800 shrink-0"></i> <span class="truncate">${s}</span></div> <span class="text-blue-600 font-extrabold shrink-0 pl-1">(${sessionsPerStore} Sessions)</span></li>`).join('')}
+            </ul>
+          </div>
+          
+          <div class="flex-1 flex flex-col mt-4 pb-2 min-h-[100px]">
+            <h4 class="text-sm font-black text-[#2e7d32] uppercase tracking-widest mb-2 shrink-0">APPROVALS</h4>
+            <table class="w-full flex-1 text-left text-xs border border-[#2e7d32] rounded-xl overflow-hidden h-full">
+              <thead class="bg-[#2e7d32] text-white font-black uppercase tracking-wider text-[11px] shrink-0">
+                <tr>
+                  <th class="p-2.5 border-r border-[#1b5e20] w-[32%]">Role</th>
+                  <th class="p-2.5 border-r border-[#1b5e20] w-[24%]">Name</th>
+                  <th class="p-2.5 border-r border-[#1b5e20] w-[24%]">Signature</th>
+                  <th class="p-2.5 w-[20%]">Date</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white font-black text-slate-900">
+                <tr class="border-b border-slate-200 bg-slate-50 h-[33%]">
+                  <td class="p-2.5 border-r border-slate-200 text-[11px]">Senior Marketing Manager</td>
+                  <td class="p-2.5 border-r border-slate-200 font-normal text-slate-700 text-[11px]">Mahmoud Abd Elghany</td>
+                  <td class="p-2.5 border-r border-slate-200"></td>
+                  <td class="p-2.5"></td>
+                </tr>
+                <tr class="border-b border-slate-200 bg-white h-[33%]">
+                  <td class="p-2.5 border-r border-slate-200 text-[11px]">BD Executive Director</td>
+                  <td class="p-2.5 border-r border-slate-200 font-normal text-slate-700 text-[11px]">Tamer El Nahas</td>
+                  <td class="p-2.5 border-r border-slate-200"></td>
+                  <td class="p-2.5"></td>
+                </tr>
+                <tr class="bg-slate-50 h-[33%]">
+                  <td class="p-2.5 border-r border-slate-200 text-[11px]">Operation Executive Director</td>
+                  <td class="p-2.5 border-r border-slate-200 font-normal text-slate-700 text-[11px]">Yazeed Al Otaibi</td>
+                  <td class="p-2.5 border-r border-slate-200"></td>
+                  <td class="p-2.5"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="shrink-0 text-center text-sm text-slate-400 font-bold pt-4">In-Store Activation Approval - Al Habib Pharmacy (Page 1 of 2)</div>
+        </div>
+
+        <div class="flex flex-col min-h-[270mm] pt-8">
+          <div class="flex-1 space-y-5">
+            <h4 class="font-black text-lg text-slate-900 uppercase tracking-wider">Attached Promotional Artwork & Materials (${imagesList.length})</h4>
+            ${imagesList.length === 1 ? `
+              <div class="flex h-[210mm]"><img src="${imagesList[0]}" class="w-full h-full object-cover rounded-2xl border border-slate-300 shadow-sm"></div>
+            ` : imagesList.length === 2 ? `
+              <div class="grid grid-cols-1 gap-4 h-[210mm]">
+                ${imagesList.slice(0, 2).map(img => `<img src="${img}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">`).join('')}
+              </div>
+            ` : imagesList.length === 3 ? `
+              <div class="grid grid-cols-2 gap-4 h-[210mm]">
+                <img src="${imagesList[0]}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">
+                <img src="${imagesList[1]}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">
+                <img src="${imagesList[2]}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm col-span-2">
+              </div>
+            ` : imagesList.length >= 4 ? `
+              <div class="grid grid-cols-2 gap-4 h-[210mm]">
+                ${imagesList.slice(0, 4).map(img => `<img src="${img}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">`).join('')}
+              </div>
+            ` : `<p class="text-base text-slate-400 italic">No promotional mockup images attached.</p>`}
+          </div>
+          <div class="shrink-0 text-center text-sm text-slate-400 font-bold pt-12 pb-6">In-Store Activation Approval - Al Habib Pharmacy (Page 2 of 2)</div>
+        </div>
+      `;
+
+      openModal('modal-pdf-preview');
+    }
+
+    async function downloadPDF() {
+      const act = currentViewingActivation;
+      if (!act) return;
+      
+      const imagesList = act.images || (act.image ? [act.image] : []); 
+
+      const btn = document.getElementById('btn-download-pdf');
+      if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+      }
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        
+        const refStr = getActivationRefStr(act);
+        const printDateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        const logoBase64 = await getLogoBase64();
+        
+        const daysCalc = calculateOperationalDays(act.startDate, act.endDate);
+        const sessionsPerStore = daysCalc.workingDays;
+        const totalSessions = sessionsPerStore * (act.stores ? act.stores.length : 0);
+
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 0, 210, 25, 'F');
+
+        if (logoBase64) {
+          try { doc.addImage(logoBase64, 'PNG', 15, 6, 50, 14); } 
+          catch(e) { console.warn("PDF Image draw error", e); }
+        } else {
+           doc.setFillColor(46, 125, 50);
+           doc.roundedRect(15, 6, 14, 14, 2, 2, 'F');
+           doc.setTextColor(255, 255, 255);
+           doc.text("H", 19, 15);
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.setTextColor(15, 23, 42);
+        doc.text("IN-STORE ACTIVATION APPROVAL", 195, 12, { align: "right" });
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(46, 125, 50);
+        doc.text(`REF: ${refStr} | Date: ${printDateStr}`, 195, 18, { align: "right" });
+
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, 30, 180, 75, 4, 4, 'FD');
+
+        // Main Title
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(15, 23, 42);
+        doc.text(act.activityName, 20, 42);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(46, 125, 50);
+        doc.text(`BRAND: ${act.brandName.toUpperCase()}`, 20, 50);
+
+        const metaRows = [
+          ["Product Category:", act.category || '-'],
+          ["Vendor / Partner:", act.vendorName || '-'],
+          ["Activity Type:", act.activityType || '-'],
+          ["Schedule Duration:", `${fmtDate(act.startDate)} to ${fmtDate(act.endDate)}`],
+          ["", `${daysCalc.workingDays} Days (Fridays Excluded)`],
+          ["Activity Timing:", `${fmtTime(act.startTime)} to ${fmtTime(act.endTime)}`],
+          ["Total Sessions:", `${totalSessions} (${sessionsPerStore} per store)`]
+        ];
+
+        let mY = 58;
+        metaRows.forEach(row => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(100, 116, 139);
+          doc.text(row[0], 20, mY);
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          if (row[0] === "Schedule Duration:" || row[0] === "" || row[0] === "Activity Timing:") doc.setTextColor(46, 125, 50);
+          else doc.setTextColor(15, 23, 42);
+          doc.text(row[1], 70, mY);
+          mY += 6.5;
+        });
+
+        let currentY = 108;
+
+        const splitObj = doc.splitTextToSize(act.objective || '-', 170);
+        const objHeight = splitObj.length * 5.5;
+        const objBoxHeight = objHeight + 14;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, currentY, 180, objBoxHeight, 4, 4, 'FD');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(46, 125, 50);
+        doc.text("Activity Objective", 20, currentY + 7);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.text(splitObj, 20, currentY + 13); 
+        currentY += objBoxHeight + 4;
+
+        const splitDesc = doc.splitTextToSize(act.description || 'No additional details provided.', 170);
+        const descHeight = splitDesc.length * 5.5;
+        const detailBoxHeight = descHeight + 14;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, currentY, 180, detailBoxHeight, 4, 4, 'FD');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(46, 125, 50);
+        doc.text("Activity Details", 20, currentY + 7);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.text(splitDesc, 20, currentY + 13); 
+        currentY += detailBoxHeight + 4;
+
+        const storesArr = act.stores || [];
+        let numCols = storesArr.length > 18 ? 3 : 2;
+        let rowsNeeded = Math.ceil(storesArr.length / numCols);
+        let rowSpacing = storesArr.length > 27 ? 5.5 : 6.5;
+
+        // Shrink-wrap the store box height exactly to the content
+        let storeBoxHeight = 16 + (rowsNeeded * rowSpacing);
+
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, currentY, 180, storeBoxHeight, 4, 4, 'FD');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(46, 125, 50);
+        doc.text(`CONFIRMED STORE ALLOCATIONS (${act.stores ? act.stores.length : 0})`, 20, currentY + 7);
+
+        let stY = currentY + 13;
+        let stX = 20;
+        
+        const maxRowsPerCol = Math.floor((storeBoxHeight - 12) / rowSpacing);
+        const maxStoresVisible = Math.max(1, maxRowsPerCol * numCols);
+        let colWidth = 180 / numCols;
+
+        storesArr.slice(0, maxStoresVisible).forEach((st, idx) => {
+          if (idx !== 0 && idx % maxRowsPerCol === 0) { 
+            stX += colWidth; 
+            stY = currentY + 13;
+          }
+          
+          const truncatedSt = st.length > 22 ? st.substring(0, 19) + '...' : st;
+          const storeText = `• ${truncatedSt}`;
+          const sessText = `(${sessionsPerStore} Sessions)`;
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(rowSpacing < 6 ? 9 : 10.5);
+          
+          doc.setTextColor(15, 23, 42);
+          doc.text(storeText, stX, stY);
+          
+          const storeTextWidth = doc.getTextWidth(storeText);
+          doc.setTextColor(37, 99, 235);
+          doc.text(sessText, stX + storeTextWidth + 3, stY); 
+          
+          stY += rowSpacing;
+        });
+        
+        if (storesArr.length > maxStoresVisible) {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(9);
+          doc.setTextColor(100, 116, 139);
+          doc.text(`...and ${storesArr.length - maxStoresVisible} more branch locations.`, 20, currentY + storeBoxHeight - 3);
+        }
+
+        // Table strictly follows the Stores box, absorbing all remaining page height!
+        let currentTableY = currentY + storeBoxHeight + 4;
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(46, 125, 50); 
+        doc.text("APPROVALS", 15, currentTableY + 4);
+
+        currentTableY += 6; // Move Y down just past the "APPROVALS" title
+        
+        // Calculate dynamic height stretching ALL the way down to page margin (Y=280)
+        let tableTotalHeight = 280 - currentTableY;
+        if (tableTotalHeight < 36) tableTotalHeight = 36; // safety minimum
+
+        const headerHeight = 7;
+        let rowHeight = (tableTotalHeight - headerHeight) / 3;
+
+        const cols = [15, 68, 115, 165, 195];
+
+        doc.setFillColor(46, 125, 50);
+        doc.rect(15, currentTableY, 180, headerHeight, 'FD'); 
+        doc.setDrawColor(203, 213, 225);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5); 
+        doc.setTextColor(255, 255, 255);
+        doc.text("Role", 18, currentTableY + 5);
+        doc.text("Name", 71, currentTableY + 5);
+        doc.text("Signature", 118, currentTableY + 5);
+        doc.text("Date", 168, currentTableY + 5);
+        
+        cols.forEach(x => doc.line(x, currentTableY, x, currentTableY + headerHeight));
+        currentTableY += headerHeight;
+        
+        const approvalRows = [
+          ["Senior Marketing Manager", "Mahmoud Abd Elghany", "", ""],
+          ["BD Executive Director", "Tamer El Nahas", "", ""],
+          ["Operation Executive Director", "Yazeed Al Otaibi", "", ""]
+        ];
+
+        approvalRows.forEach((row, i) => {
+          doc.setFillColor(i % 2 === 0 ? 248 : 255, i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 252 : 255);
+          doc.rect(15, currentTableY, 180, rowHeight, 'FD'); 
+          cols.forEach(x => doc.line(x, currentTableY, x, currentTableY + rowHeight));
+          
+          // Vertically center text directly into the dynamically expanded rows
+          let textYCenter = currentTableY + (rowHeight / 2) + 1.5;
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9); 
+          doc.setTextColor(15, 23, 42);
+          doc.text(row[0], 18, textYCenter);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9); 
+          doc.setTextColor(51, 65, 85);
+          doc.text(row[1], 71, textYCenter); 
+
+          currentTableY += rowHeight;
+        });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text("In-Store Activation Approval - Al Habib Pharmacy (Page 1 of 2)", 105, 287, { align: "center" });
+
+        doc.addPage();
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 0, 210, 20, 'F');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(46, 125, 50);
+        doc.text("IN-STORE ACTIVATION APPROVAL", 15, 14);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`Attached Promotional Artwork & Materials (${imagesList.length})`, 15, 30);
+
+        if (imagesList.length > 0) {
+          const maxImg = Math.min(imagesList.length, 4);
+          for(let i = 0; i < maxImg; i++) {
+            let imgX, imgY, imgW, imgH;
+
+            if (maxImg === 1) {
+              imgX = 15; imgY = 40; imgW = 180; imgH = 230;
+            } else if (maxImg === 2) {
+              imgX = 15; imgY = 40 + (i * 120); imgW = 180; imgH = 110;
+            } else if (maxImg === 3) {
+              if (i < 2) { 
+                imgX = 15 + (i * 95); imgY = 40; imgW = 85; imgH = 110; 
+              } else { 
+                imgX = 15; imgY = 160; imgW = 180; imgH = 110; 
+              }
+            } else {
+              imgX = 15 + ((i % 2) * 95); 
+              imgY = 40 + (Math.floor(i / 2) * 120); 
+              imgW = 85; imgH = 110;
+            }
+
+            try {
+              doc.addImage(imagesList[i], 'JPEG', imgX, imgY, imgW, imgH);
+            } catch(e) {
+              doc.setFillColor(241, 245, 249);
+              doc.rect(imgX, imgY, imgW, imgH, 'F');
+              doc.setFontSize(11);
+              doc.text("Image rendering error", imgX + (imgW/2) - 20, imgY + (imgH/2));
+            }
+          }
+        } else {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(11.5);
+          doc.setTextColor(148, 163, 184);
+          doc.text("No promotional mockup images attached to this request.", 15, 42);
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(148, 163, 184);
+        doc.text("In-Store Activation Approval - Al Habib Pharmacy (Page 2 of 2)", 105, 287, { align: "center" });
+
+        doc.save(`Activation_${act.brandName}_${refStr}.pdf`);
+        showToast("PDF Dossier Exported Successfully!", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to generate PDF: " + err.message, "error");
+      } finally {
+        if(btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-file-pdf text-white"></i> Export PDF';
+        }
+      }
+    }
+
+    document.getElementById('setting-logo-upload').addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if(!file) return;
+      
+      showToast("Processing logo to secure string...", "success");
+      const b64 = await processImageFile(file);
+      if(b64) {
+        savedPortalLogo = b64;
+        document.getElementById('setting-logo-preview').classList.remove('hidden');
+        document.getElementById('setting-logo-img').src = b64;
+        
+        if(db) {
+          db.collection('settings').doc('branding').set({ logoBase64: b64 }, { merge: true })
+            .then(() => showToast("Logo saved globally to Cloud Database!", "success"))
+            .catch(err => showToast("Saved locally (Cloud error)", "error"));
+        } else {
+          localStorage.setItem('isa_logo', b64);
+          showToast("Logo saved locally!", "success");
+        }
+      }
+      this.value = '';
+    });
+
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.remove('hidden');
+      void modal.offsetWidth;
+      modal.classList.remove('opacity-0');
+      modal.querySelector('.modal-panel').classList.remove('scale-95');
+      modal.querySelector('.modal-panel').classList.add('scale-100');
+      
+      if (modalId === 'modal-settings') {
+         getLogoBase64().then(b64 => {
+           if (b64) {
+             document.getElementById('setting-logo-preview').classList.remove('hidden');
+             document.getElementById('setting-logo-img').src = b64;
+           }
+         });
+         pendingWhitelistConfig = JSON.parse(JSON.stringify(whitelistConfig));
+         if(!pendingWhitelistConfig.whitelistMap) pendingWhitelistConfig.whitelistMap = { 'saad.naiem@gmail.com': true };
+         if(!pendingWhitelistConfig.mode) pendingWhitelistConfig.mode = 'ALL';
+         renderWhitelistUI();
+      }
+      if (modalId === 'modal-stores') {
+          if(typeof renderManageStoresList === 'function') renderManageStoresList();
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.add('opacity-0');
+      modal.querySelector('.modal-panel').classList.remove('scale-100');
+      modal.querySelector('.modal-panel').classList.add('scale-95');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+      
+      if (modalId === 'modal-stores-analytics') {
+         if (currentDashboardFilter === 'ALL') highlightCard('card-total');
+         if (currentDashboardFilter === 'ACTIVE') highlightCard('card-active');
+      }
+    }
+
+    function exportToCSV() {
+      if(activations.length === 0) return showToast("No data to export.", "error");
+      
+      const headers = [
+          "Start Date", "End Date", "Month of Activity", "Year of Activity",
+          "Activity Title", "Brand Name", "Product Category", "Activity Type", "Vendor / Partner",
+          "Daily Timing", "Duration (Working Days)", "Total Number of Stores", "Total Number of Sessions",
+          "Status", "Booked By (Email)", "Store Names"
+      ];
+
+      const rows = [headers];
+      const now = new Date();
+      now.setHours(0,0,0,0);
+
+      activations.forEach(act => {
+          const sDate = new Date(act.startDate);
+          const eDate = new Date(act.endDate);
+          sDate.setHours(0,0,0,0);
+          eDate.setHours(23,59,59,999);
+          
+          let status = "Upcoming";
+          if (now > eDate) status = "Completed";
+          else if (now >= sDate && now <= eDate) status = "Active";
+
+          const month = sDate.toLocaleString('en-US', { month: 'long' });
+          const year = sDate.getFullYear();
+          
+          const daysCalc = calculateOperationalDays(act.startDate, act.endDate);
+          const workingDays = daysCalc.workingDays;
+          const totalStores = act.stores ? act.stores.length : 0;
+          const totalSessions = workingDays * totalStores;
+          const timing = `${fmtTime(act.startTime)} to ${fmtTime(act.endTime)}`;
+          const storesList = act.stores ? act.stores.join(" | ") : "";
+
+          const row = [
+              `"${act.startDate || ''}"`,
+              `"${act.endDate || ''}"`,
+              `"${month}"`,
+              `"${year}"`,
+              `"${(act.activityName || '').replace(/"/g, '""')}"`,
+              `"${(act.brandName || '').replace(/"/g, '""')}"`,
+              `"${act.category || ''}"`,
+              `"${(act.activityType || '').replace(/"/g, '""')}"`,
+              `"${(act.vendorName || '').replace(/"/g, '""')}"`,
+              `"${timing}"`,
+              workingDays,
+              totalStores,
+              totalSessions,
+              `"${status}"`,
+              `"${act.authorEmail || 'Local'}"`,
+              `"${storesList}"`
+          ];
+          rows.push(row);
+      });
+
+      const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `In_Store_Activations_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("CSV Exported Successfully!", "success");
+    }
+
+    window.onload = function() {
+      initFirebase();
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById('f-startDate').min = todayStr;
+      document.getElementById('f-endDate').min = todayStr;
+      setTimeout(() => getLogoBase64(), 1500);
+    };
+  </script>
+</body>
+</html>
