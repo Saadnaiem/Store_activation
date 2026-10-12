@@ -25,6 +25,11 @@
               50: '#e8f5e9', 100: '#c8e6c9', 500: '#4caf50',
               600: '#43a047', 700: '#388e3c', 800: '#2e7d32', /* Official Corporate Green */
               900: '#1b5e20',
+            },
+            display: {
+              50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe',
+              500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+              800: '#5b21b6', 900: '#4c1d95',
             }
           },
           boxShadow: {
@@ -55,33 +60,54 @@
     .modal-panel { transition: transform 0.3s ease, opacity 0.3s ease; }
 
     input:focus, select:focus, textarea:focus { background-color: #ffffff; }
+
+    /* Solid illuminated red arrow styling */
+    .arrow-red-glow {
+      color: #ff0000;
+      text-shadow: 0 0 10px rgba(255, 0, 0, 1), 0 0 20px rgba(255, 0, 0, 0.8), 0 0 30px rgba(220, 38, 38, 0.6);
+      filter: drop-shadow(0 0 8px rgba(255, 0, 0, 1));
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .arrow-red-glow:hover, .group:hover .arrow-red-glow {
+      color: #ff0000;
+      text-shadow: 0 0 14px rgba(255, 0, 0, 1), 0 0 28px rgba(255, 0, 0, 1), 0 0 40px rgba(255, 0, 0, 0.8);
+      filter: drop-shadow(0 0 12px rgba(255, 0, 0, 1));
+    }
   </style>
 </head>
 <body class="text-slate-900 font-bold antialiased min-h-screen flex flex-col relative">
 
   <header class="bg-white/90 backdrop-blur-md sticky top-0 z-30 border-b border-slate-200 shadow-sm">
-    <div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <div class="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 min-h-[4.5rem] sm:h-20 py-2 sm:py-0 flex items-center justify-between gap-2">
       
-      <div class="flex items-center gap-3 sm:gap-4">
-        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-lg shadow-brand-800/30 shrink-0">
-          <i class="fa-solid fa-bolt text-xl sm:text-2xl"></i>
+      <div class="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+        <div class="relative flex items-center shrink-0">
+          <button id="btn-back-home" onclick="showPortalLanding()" class="hidden w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 flex items-center justify-center transition-all shadow-sm shrink-0 group relative" title="In-Store Activation">
+            <i class="fa-solid fa-arrow-left text-sm sm:text-base arrow-red-glow"></i>
+            <span class="pointer-events-none absolute left-0 top-11 sm:top-12 whitespace-nowrap bg-emerald-700 text-white text-[11px] sm:text-xs font-black px-3 py-1.5 rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 flex items-center gap-1.5 border border-emerald-600">
+              <i class="fa-solid fa-arrow-left text-[9px] text-emerald-200"></i> In-Store Activation
+            </span>
+          </button>
         </div>
-        <div>
-          <h1 class="font-black text-lg sm:text-2xl text-slate-900 tracking-tight leading-tight">In-Store Activation Portal</h1>
-          <p class="text-[10px] sm:text-xs text-brand-700 font-extrabold tracking-widest uppercase mt-0.5">Dr. Sulaiman Al Habib Pharmacy</p>
+        <div id="header-portal-icon" class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-md sm:shadow-lg shrink-0 transition-all">
+          <i id="header-icon-i" class="fa-solid fa-bolt text-lg sm:text-2xl"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h1 id="header-portal-title" class="font-black text-xs sm:text-lg md:text-xl lg:text-2xl text-slate-900 tracking-tight leading-snug sm:leading-tight">In-Store Activation & Display Portal</h1>
+          <p class="text-[8px] sm:text-[11px] md:text-xs text-brand-700 font-extrabold tracking-widest uppercase mt-0.5 leading-none">Dr. Sulaiman Al Habib Pharmacy</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-4 shrink-0">
-        <button id="btn-export-csv" onclick="exportToCSV()" class="hidden bg-emerald-100 text-emerald-800 px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-emerald-200 transition-colors flex items-center gap-2 shadow-sm border border-emerald-200">
+      <div class="flex items-center gap-1.5 sm:gap-4 shrink-0">
+        <button id="btn-export-csv" onclick="handleCsvExport()" class="hidden bg-emerald-100 text-emerald-800 px-2.5 py-1.5 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-emerald-200 transition-colors flex items-center gap-1.5 shadow-sm border border-emerald-200">
           <i class="fa-solid fa-file-csv"></i> <span class="hidden sm:inline">CSV Export</span>
         </button>
-        <button id="btn-portal-settings" onclick="openModal('modal-settings')" class="hidden w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center transition-colors shadow-sm" title="Portal Settings">
-          <i class="fa-solid fa-gear"></i>
+        <button id="btn-portal-settings" onclick="openModal('modal-settings')" class="hidden w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 flex items-center justify-center transition-colors shadow-sm" title="Portal Settings">
+          <i class="fa-solid fa-gear text-xs sm:text-base"></i>
         </button>
         <div id="auth-section" class="flex items-center">
-          <button onclick="triggerGoogleLogin()" class="bg-brand-800 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-2 shadow-md">
-            <i class="fa-brands fa-google"></i> Sign In
+          <button onclick="triggerGoogleLogin()" class="bg-brand-800 text-white px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-1.5 sm:gap-2 shadow-md whitespace-nowrap">
+            <i class="fa-brands fa-google"></i> <span class="hidden xs:inline">Sign In</span><span class="xs:hidden">Login</span>
           </button>
         </div>
       </div>
@@ -90,7 +116,72 @@
 
   <main class="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8">
     
-    <div class="w-full bg-slate-200/50 p-1.5 sm:p-2 rounded-2xl shadow-inner border border-slate-200 flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-2">
+    <!-- Landing Page (Choose Portal: Activations or Displays) -->
+    <div id="portal-landing" class="flex-1 flex flex-col items-center justify-center py-8 sm:py-16 fade-in w-full max-w-5xl mx-auto">
+      <div class="text-center mb-10 sm:mb-14 space-y-3">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black bg-brand-100 text-brand-800 border border-brand-200 uppercase tracking-widest shadow-sm">
+          <i class="fa-solid fa-hospital"></i> Dr. Sulaiman Al Habib Pharmacy
+        </span>
+        <h2 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight">Pharmacy Booking Management</h2>
+        <p class="text-sm sm:text-base text-slate-600 font-bold max-w-lg mx-auto leading-relaxed">Select a portal below to manage in-store brand activities, book displays, and explore store availability across all branches.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 w-full px-4">
+        <!-- Card 1: In-Store Activations -->
+        <div onclick="selectPortal('activations')" class="group relative bg-white rounded-3xl p-8 sm:p-10 border-2 border-slate-200 hover:border-brand-500 shadow-float hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden hover:-translate-y-1.5">
+          <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-brand-50 rounded-full group-hover:scale-125 transition-transform duration-500 -z-0"></div>
+          <div class="relative z-10 space-y-6">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white text-3xl sm:text-4xl shadow-lg shadow-brand-700/30 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-brand-700 transition-colors">In-Store Activations</h3>
+                <i class="fa-solid fa-arrow-right text-base arrow-red-glow opacity-0 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all"></i>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600 font-bold mt-2 leading-relaxed">
+                Brand activations, live sampling booths, health-check stands, and interactive customer campaigns with daily sessions per store.
+              </p>
+            </div>
+          </div>
+          <div class="relative z-10 mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs font-black text-brand-800 uppercase tracking-widest flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-brand-600"></i> Active Activations: <span id="landing-count-activations" class="font-extrabold text-sm ml-1">0</span>
+            </span>
+            <span class="bg-brand-50 text-brand-800 px-4 py-2 rounded-xl text-xs font-black group-hover:bg-brand-800 group-hover:text-white transition-all shadow-sm">Open Portal</span>
+          </div>
+        </div>
+
+        <!-- Card 2: In-Store Display -->
+        <div onclick="selectPortal('displays')" class="group relative bg-white rounded-3xl p-8 sm:p-10 border-2 border-slate-200 hover:border-purple-500 shadow-float hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden hover:-translate-y-1.5">
+          <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-purple-50 rounded-full group-hover:scale-125 transition-transform duration-500 -z-0"></div>
+          <div class="relative z-10 space-y-6">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center text-white text-3xl sm:text-4xl shadow-lg shadow-purple-700/30 group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-tv"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-purple-700 transition-colors">In-Store Display</h3>
+                <i class="fa-solid fa-arrow-right text-base arrow-red-glow opacity-0 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all"></i>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-600 font-bold mt-2 leading-relaxed">
+                Floor displays, gondola ends, shelf talkers, category agreements, and promotional placement agreements across any number of stores.
+              </p>
+            </div>
+          </div>
+          <div class="relative z-10 mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs font-black text-purple-800 uppercase tracking-widest flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check text-purple-600"></i> Active Displays: <span id="landing-count-displays" class="font-extrabold text-sm ml-1">0</span>
+            </span>
+            <span class="bg-purple-50 text-purple-800 px-4 py-2 rounded-xl text-xs font-black group-hover:bg-purple-800 group-hover:text-white transition-all shadow-sm">Open Portal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-Store Activations Portal Container -->
+    <div id="section-activations-portal" class="hidden flex-col gap-6 sm:gap-8 fade-in w-full">
+      <div class="w-full bg-slate-200/50 p-1.5 sm:p-2 rounded-2xl shadow-inner border border-slate-200 flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-2">
       <button onclick="switchTab('dashboard')" id="tab-dashboard" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all shadow-md bg-brand-600 text-white flex justify-center items-center shrink-0 border border-transparent group">
         <span class="flex items-center gap-2"><i id="icon-dashboard" class="fa-solid fa-chart-pie text-white transition-colors"></i> <span class="whitespace-nowrap">Activations</span></span>
       </button>
@@ -108,7 +199,8 @@
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full">
         
-        <div id="card-total" onclick="setDashboardFilter('ALL')" class="bg-blue-500 text-white ring-4 ring-blue-300 ring-offset-4 scale-[1.03] shadow-[0_0_25px_rgba(59,130,246,0.5)] z-20 p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden">
+        <!-- Card 1: Total Scheduled (Solid Vibrant Blue) -->
+        <div id="card-total" onclick="setDashboardFilter('ALL')" class="bg-blue-600 text-white ring-4 ring-blue-300 ring-offset-4 scale-[1.03] shadow-[0_10px_30px_rgba(37,99,235,0.45)] z-20 p-8 rounded-2xl cursor-pointer hover:bg-blue-700 hover:shadow-2xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden">
            <div class="relative z-10">
               <p class="text-xs sm:text-sm font-black text-blue-100 uppercase tracking-widest mb-1 transition-colors">Total Scheduled</p>
               <h3 class="text-4xl sm:text-5xl font-black text-white" id="metric-total">0</h3>
@@ -119,7 +211,8 @@
            </div>
         </div>
 
-        <div id="card-active" onclick="setDashboardFilter('ACTIVE')" class="bg-emerald-500 text-white p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent">
+        <!-- Card 2: Active Now (Solid Vibrant Emerald) -->
+        <div id="card-active" onclick="setDashboardFilter('ACTIVE')" class="bg-emerald-600 text-white p-8 rounded-2xl cursor-pointer hover:bg-emerald-700 hover:shadow-2xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent shadow-[0_10px_30px_rgba(5,150,105,0.35)]">
            <div class="relative z-10">
               <p class="text-xs sm:text-sm font-black text-emerald-100 uppercase tracking-widest mb-1 transition-colors">Active Now</p>
               <h3 class="text-4xl sm:text-5xl font-black text-white" id="metric-active">0</h3>
@@ -130,7 +223,8 @@
            </div>
         </div>
 
-        <div id="card-stores" onclick="showStoresAnalytics()" class="bg-purple-500 text-white p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent">
+        <!-- Card 3: Stores Utilized (Solid Vibrant Purple) -->
+        <div id="card-stores" onclick="showStoresAnalytics()" class="bg-purple-600 text-white p-8 rounded-2xl cursor-pointer hover:bg-purple-700 hover:shadow-2xl transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent shadow-[0_10px_30px_rgba(147,51,234,0.35)]">
            <div class="relative z-10">
               <p class="text-xs sm:text-sm font-black text-purple-100 uppercase tracking-widest mb-1 transition-colors">Stores Utilized</p>
               <h3 class="text-4xl sm:text-5xl font-black text-white" id="metric-stores">0</h3>
@@ -406,6 +500,331 @@
         </div>
       </div>
     </div>
+    </div>
+    <!-- End Activations Portal Container -->
+
+    <!-- In-Store Display Portal Container -->
+    <div id="section-displays-portal" class="hidden flex-col gap-6 sm:gap-8 fade-in w-full">
+      
+      <!-- Display Tabs Navigation -->
+      <div class="w-full bg-purple-100/60 p-1.5 sm:p-2 rounded-2xl shadow-inner border border-purple-200 flex overflow-x-auto hide-scrollbar snap-x snap-mandatory gap-2">
+        <button onclick="switchDisplayTab('dashboard')" id="dtab-dashboard" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all shadow-md bg-purple-700 text-white flex justify-center items-center shrink-0 border border-transparent group">
+          <span class="flex items-center gap-2"><i id="dicon-dashboard" class="fa-solid fa-chart-pie text-white transition-colors"></i> <span class="whitespace-nowrap">In-Store Display</span></span>
+        </button>
+        
+        <button onclick="switchDisplayTab('new')" id="dtab-new" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all text-slate-500 hover:text-slate-800 hover:bg-white flex justify-center items-center shrink-0 border border-transparent group shadow-sm">
+          <span class="flex items-center gap-2"><i id="dicon-new" class="fa-solid fa-calendar-plus text-purple-500 group-hover:text-purple-600 transition-colors"></i> <span class="whitespace-nowrap">Book Display</span></span>
+        </button>
+        
+        <button onclick="switchDisplayTab('free-busy')" id="dtab-free-busy" class="flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all text-slate-500 hover:text-slate-800 hover:bg-white flex justify-center items-center shrink-0 border border-transparent group shadow-sm">
+          <span class="flex items-center gap-2"><i id="dicon-free-busy" class="fa-solid fa-map-location-dot text-indigo-500 group-hover:text-indigo-600 transition-colors"></i> <span class="whitespace-nowrap">Explore Availability</span></span>
+        </button>
+      </div>
+
+      <!-- Display Dashboard View -->
+      <div id="dview-dashboard" class="flex flex-col gap-8 fade-in w-full">
+        
+        <!-- Display Metric Cards: Three Distinct Colors (Indigo, Emerald, Fuchsia) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 w-full">
+          
+          <!-- Card 1: Indigo -->
+          <div id="dcard-total" onclick="setDisplayDashboardFilter('ALL')" class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white ring-4 ring-indigo-300 ring-offset-4 scale-[1.03] shadow-[0_0_25px_rgba(79,70,229,0.5)] z-20 p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden">
+             <div class="relative z-10">
+                <p class="text-xs sm:text-sm font-black text-indigo-100 uppercase tracking-widest mb-1 transition-colors">Total Scheduled</p>
+                <h3 class="text-4xl sm:text-5xl font-black text-white" id="dmetric-total">0</h3>
+                <span class="text-[10px] sm:text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 group-hover:bottom-[-4px]">Click to view all</span>
+             </div>
+             <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl sm:text-3xl transition-colors shadow-inner relative z-10">
+                <i class="fa-solid fa-tv"></i>
+             </div>
+          </div>
+
+          <!-- Card 2: Emerald -->
+          <div id="dcard-active" onclick="setDisplayDashboardFilter('ACTIVE')" class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent">
+             <div class="relative z-10">
+                <p class="text-xs sm:text-sm font-black text-emerald-100 uppercase tracking-widest mb-1 transition-colors">Active Now</p>
+                <h3 class="text-4xl sm:text-5xl font-black text-white" id="dmetric-active">0</h3>
+                <span class="text-[10px] sm:text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 group-hover:bottom-[-4px]">Click to filter active</span>
+             </div>
+             <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl sm:text-3xl transition-colors shadow-inner relative z-10">
+                <i class="fa-solid fa-sparkles"></i>
+             </div>
+          </div>
+
+          <!-- Card 3: Fuchsia -->
+          <div id="dcard-stores" onclick="showDisplayStoresAnalytics()" class="bg-gradient-to-br from-fuchsia-600 to-pink-700 text-white p-8 rounded-2xl cursor-pointer hover:shadow-lg transition-all duration-300 flex items-center justify-between group relative overflow-hidden border border-transparent">
+             <div class="relative z-10">
+                <p class="text-xs sm:text-sm font-black text-fuchsia-100 uppercase tracking-widest mb-1 transition-colors">Stores Utilized</p>
+                <h3 class="text-4xl sm:text-5xl font-black text-white" id="dmetric-stores">0</h3>
+                <span class="text-[10px] sm:text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity absolute -bottom-6 group-hover:bottom-[-4px]">Click to view analytics</span>
+             </div>
+             <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 text-white flex items-center justify-center text-2xl sm:text-3xl transition-colors shadow-inner relative z-10">
+                <i class="fa-solid fa-shop"></i>
+             </div>
+          </div>
+        </div>
+
+        <!-- Display Campaign Directory Table -->
+        <div class="bg-white rounded-3xl shadow-glass border border-slate-200 overflow-hidden flex flex-col w-full">
+          <div class="p-6 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex items-center gap-3 flex-wrap">
+              <h2 class="text-2xl font-black text-slate-900">Display Agreement Directory</h2>
+              <div id="dmaster-bulk-actions" class="hidden items-center gap-2">
+                <button onclick="promptDeleteSelectedDisplays()" class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5 shadow-sm border border-red-200">
+                  <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="dselected-count">0</span>)
+                </button>
+              </div>
+              <div id="dmaster-wipe-section" class="hidden">
+                <button onclick="promptWipeAllDisplays()" class="bg-red-600 text-white hover:bg-red-700 px-3 py-1.5 rounded-xl text-xs font-black transition-colors flex items-center gap-1.5 shadow-sm">
+                  <i class="fa-solid fa-skull-crossbones"></i> Wipe All Displays
+                </button>
+              </div>
+            </div>
+            <div class="relative w-full sm:w-96">
+              <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="search-display-dashboard" onkeyup="renderDisplayDashboard()" placeholder="Search any column..." class="w-full pl-11 pr-4 py-2.5 sm:py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-bold text-slate-900 transition-colors focus:bg-white shadow-inner">
+            </div>
+          </div>
+          <div class="overflow-x-auto w-full">
+            <table class="w-full text-left text-sm min-w-[900px]">
+              <thead class="bg-purple-800 text-white font-black uppercase tracking-wider text-xs">
+                <tr>
+                  <th class="px-4 py-4 w-[5%] text-center">
+                    <input type="checkbox" id="dselect-all-checkbox" onchange="toggleSelectAllDisplays(this)" class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
+                  </th>
+                  <th class="px-6 py-4 w-[25%]">Display Title & Brand</th>
+                  <th class="px-6 py-4 w-[15%]">Category</th>
+                  <th class="px-6 py-4 w-[20%]">Schedule Duration</th>
+                  <th class="px-6 py-4 w-[25%]">Allocated Store Locations</th>
+                  <th class="px-6 py-4 w-[10%] text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="display-dashboard-table-body" class="divide-y divide-slate-100 bg-white">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+            <div id="display-dashboard-empty-state" class="hidden p-12 sm:p-20 flex flex-col items-center justify-center text-center">
+              <div class="w-16 h-16 sm:w-20 sm:h-20 bg-purple-50 rounded-full flex items-center justify-center text-purple-300 mb-4 shadow-inner">
+                <i class="fa-solid fa-tv text-3xl"></i>
+              </div>
+              <h3 class="text-lg font-black text-slate-900">No display agreements found</h3>
+              <p class="text-slate-600 font-bold text-sm mt-1 max-w-sm">Use the 'Book Display' tab to schedule new in-store display agreements.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Display View -->
+      <div id="dview-new" class="hidden flex flex-col gap-6 fade-in">
+        <div id="dauth-warning" class="hidden bg-red-50 border border-red-200 p-5 rounded-2xl shadow-sm flex items-start gap-4">
+          <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-lock text-red-600"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-red-900">Authentication Required</h3>
+            <p class="text-sm font-bold text-red-800 mt-1">Access to booking is restricted. Please sign in with your Google account to book store display agreements.</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-purple-100 overflow-hidden" id="dbooking-container-wrapper">
+          <div class="p-6 md:p-8 border-b border-purple-100 bg-gradient-to-r from-white to-purple-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h2 id="dform-section-title" class="text-2xl font-black text-purple-900 tracking-tight">Book Display</h2>
+              <p class="text-sm text-purple-700 font-black mt-1"><i class="fa-solid fa-circle-check mr-1 text-purple-600"></i> Flexible Policy: Any number of display activities permitted per store.</p>
+            </div>
+          </div>
+          
+          <form id="display-form" onsubmit="handleDisplaySubmit(event)" class="p-6 md:p-8 grid grid-cols-1 xl:grid-cols-3 gap-8 md:gap-12 bg-white w-full">
+            
+            <div class="xl:col-span-2 space-y-8">
+              <div class="bg-gradient-to-br from-white to-purple-50/40 p-6 md:p-8 rounded-3xl border border-purple-100 shadow-sm relative overflow-hidden group hover:border-purple-200 transition-colors">
+                <div class="absolute top-0 left-0 w-1 h-full bg-purple-600 rounded-l-3xl"></div>
+                <div class="flex items-center gap-3 mb-6">
+                   <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                      <i class="fa-solid fa-tag text-sm"></i>
+                   </div>
+                   <h3 class="text-sm font-black text-purple-900 tracking-widest uppercase">1. Display Identity</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-black text-slate-900 mb-2">Display Title <span class="text-red-500">*</span></label>
+                    <input type="text" id="df-activityName" required placeholder="e.g. End-Cap Gondola Display Agreement" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-black text-slate-900 mb-2">Brand Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="df-brandName" required placeholder="e.g. Bioderma" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-black text-slate-900 mb-2">Vendor / Partner Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="df-vendorName" required placeholder="e.g. NAOS" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-black text-slate-900 mb-2">Product Category <span class="text-red-500">*</span></label>
+                    <select id="df-category" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 cursor-pointer transition-shadow">
+                      <option value="" disabled selected>Select Category</option>
+                      <option value="WELLNESS">WELLNESS</option>
+                      <option value="BEAUTY">BEAUTY</option>
+                      <option value="PERSONAL CARE">PERSONAL CARE</option>
+                      <option value="MOM AND BABY">MOM AND BABY</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-black text-slate-900 mb-2">Display Type <span class="text-red-500">*</span></label>
+                    <input type="text" id="df-activityType" required placeholder="e.g. Floor Stand / Gondola End" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-black text-slate-900 mb-2">Objective of Display <span class="text-red-500">*</span></label>
+                    <input type="text" id="df-objective" required placeholder="e.g. Highlight new skincare product launch" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-black text-slate-900 mb-2">Display Details & Specifications <span class="text-red-500">*</span></label>
+                    <textarea id="df-description" required rows="3" placeholder="Provide dimensions, units, placement guidelines, etc." class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm font-black text-slate-900 resize-none transition-shadow"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gradient-to-br from-white to-purple-50/40 p-6 md:p-8 rounded-3xl border border-purple-100 shadow-sm relative overflow-hidden group hover:border-purple-200 transition-colors">
+                <div class="absolute top-0 left-0 w-1 h-full bg-purple-600 rounded-l-3xl"></div>
+                <div class="flex items-center gap-3 mb-6">
+                   <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 shrink-0 shadow-inner group-hover:scale-110 transition-transform">
+                      <i class="fa-solid fa-calendar-days text-sm"></i>
+                   </div>
+                   <h3 class="text-sm font-black text-purple-900 tracking-widest uppercase">2. Schedule & Materials</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label class="block text-sm font-black text-slate-900 mb-2">Start Date <span class="text-red-500">*</span></label>
+                    <input type="date" id="df-startDate" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-black text-slate-900 mb-2">End Date <span class="text-red-500">*</span></label>
+                    <input type="date" id="df-endDate" required class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="block text-sm font-black text-slate-900 mb-2">Attach Materials / Display Artwork</label>
+                    <div class="mt-1 flex flex-col justify-center px-6 pt-5 pb-6 border-2 border-purple-200 border-dashed rounded-2xl bg-white hover:bg-purple-50/50 transition-colors relative overflow-hidden cursor-pointer group upload-area" onclick="document.getElementById('df-image').click()">
+                      <div class="space-y-2 text-center relative z-10">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                          <i class="fa-regular fa-images text-xl text-purple-600"></i>
+                        </div>
+                        <div class="flex text-sm justify-center">
+                          <span class="bg-white rounded-lg font-black text-purple-800 px-4 py-2 shadow-sm border border-purple-100 group-hover:border-purple-300 transition-colors">
+                            <span>Upload Images</span>
+                            <input id="df-image" type="file" class="sr-only" accept="image/*" multiple>
+                          </span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600 max-w-[280px] mx-auto leading-relaxed">Attach display unit photo, rendering, or artwork. Select multiple images of any size.</p>
+                      </div>
+                    </div>
+                    <div id="dimage-preview-gallery" class="flex flex-wrap gap-4 mt-4 empty:hidden"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="xl:col-span-1 flex flex-col h-[500px] sm:h-[850px] bg-gradient-to-b from-white to-purple-50/30 rounded-3xl border border-purple-100 shadow-glass overflow-hidden relative">
+              <div class="absolute top-0 left-0 w-full h-1 bg-purple-600"></div>
+              <div class="p-5 border-b border-purple-100 bg-white flex flex-col gap-4">
+                <div class="flex justify-between items-center mt-1">
+                  <div class="flex items-center gap-2">
+                     <div class="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 shrink-0 shadow-inner">
+                        <i class="fa-solid fa-store text-xs"></i>
+                     </div>
+                     <h3 class="font-black text-purple-900 text-sm uppercase tracking-wider">3. Store Allocation</h3>
+                  </div>
+                  <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-black bg-slate-200 text-slate-800" id="dstore-selection-count">0 Selected</span>
+                </div>
+                <button type="button" id="dbtn-manage-stores" onclick="openModal('modal-stores')" class="hidden w-full flex justify-center items-center gap-2 bg-white border border-purple-200 text-purple-900 px-4 py-2.5 rounded-xl text-sm font-black hover:bg-purple-50 transition-colors shadow-sm">
+                  <i class="fa-solid fa-folder-plus text-purple-700"></i> Add / Import Stores
+                </button>
+                <div class="relative">
+                  <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                  <input type="text" id="dstore-search-input" onkeyup="renderDisplayStoreCheckboxes()" placeholder="Search stores..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-black text-slate-900 shadow-sm transition-shadow">
+                </div>
+              </div>
+
+              <div class="flex-1 p-3 overflow-y-auto" id="dstore-checkbox-container"></div>
+            </div>
+
+            <div class="xl:col-span-3 pt-6 border-t border-slate-200 flex justify-end gap-3">
+              <button type="button" id="dbtn-cancel-edit" onclick="cancelDisplayEdit()" class="hidden bg-slate-200 text-slate-700 px-6 py-3.5 rounded-xl font-black hover:bg-slate-300 transition-colors flex items-center gap-2 text-base shadow-sm">
+                Cancel
+              </button>
+              <button type="submit" id="dbtn-submit" disabled class="bg-gradient-to-r from-purple-600 to-indigo-800 text-white px-8 py-3.5 rounded-xl font-black hover:from-purple-700 hover:to-indigo-900 transition-all shadow-lg shadow-purple-800/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-base">
+                <i class="fa-solid fa-calendar-check"></i> Confirm & Save Display
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Display Availability Explorer View -->
+      <div id="dview-free-busy" class="hidden flex flex-col gap-6 fade-in w-full">
+        <div class="bg-gradient-to-br from-white to-purple-50/50 p-6 md:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-purple-100 relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1 h-full bg-purple-600"></div>
+          <h2 class="text-2xl font-black text-purple-900 mb-6 tracking-tight flex items-center gap-3">
+             <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 shadow-inner">
+                <i class="fa-solid fa-map-location-dot text-lg"></i>
+             </div>
+             Display Availability Explorer
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="w-full">
+              <label class="block text-sm font-black text-slate-900 mb-2">Check From Date</label>
+              <input type="date" id="dfb-startDate" onchange="runDisplayFreeBusyCheck()" class="w-full px-4 py-3 bg-white border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+            </div>
+            <div class="w-full">
+              <label class="block text-sm font-black text-slate-900 mb-2">Check To Date</label>
+              <input type="date" id="dfb-endDate" onchange="runDisplayFreeBusyCheck()" class="w-full px-4 py-3 bg-white border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm cursor-pointer font-black text-slate-900 transition-shadow">
+            </div>
+            <div class="w-full">
+               <label class="block text-sm font-black text-slate-900 mb-2">Search Specific Store</label>
+               <div class="relative">
+                  <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                  <input type="text" id="dfb-search-store" onkeyup="runDisplayFreeBusyCheck()" placeholder="e.g. Rayan..." class="w-full pl-10 pr-4 py-3 bg-white border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-black text-slate-900 shadow-sm transition-shadow">
+               </div>
+            </div>
+            <button onclick="runDisplayFreeBusyCheck(true)" class="w-full bg-gradient-to-r from-purple-600 to-indigo-800 text-white px-8 py-3 rounded-xl font-black hover:from-purple-700 hover:to-indigo-900 transition-all shadow-lg shadow-purple-800/20 h-[48px] flex items-center justify-center gap-2 border border-transparent">
+              <i class="fa-solid fa-radar"></i> Explore Availability
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-white rounded-3xl shadow-glass border border-purple-200 overflow-hidden flex flex-col h-[600px]">
+            <div class="p-5 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-purple-200 flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-200 flex items-center justify-center text-purple-800 shadow-sm"><i class="fa-solid fa-check text-lg"></i></div>
+                <h3 class="font-black text-purple-900 text-lg">Stores Without Displays</h3>
+              </div>
+              <span id="dfb-free-count" class="bg-white text-purple-800 border border-purple-300 text-sm font-black px-4 py-1.5 rounded-full shadow-sm">0</span>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-slate-50/30 p-2">
+              <ul id="dfb-free-list" class="divide-y divide-slate-100">
+                <li class="p-10 text-slate-500 font-bold text-center text-sm">Select dates and explore to see branches without any active displays.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-3xl shadow-glass border border-indigo-200 overflow-hidden flex flex-col h-[600px]">
+            <div class="p-5 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-200 flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-indigo-800 shadow-sm"><i class="fa-solid fa-tv text-lg"></i></div>
+                <h3 class="font-black text-indigo-900 text-lg">Stores With Active Displays</h3>
+              </div>
+              <span id="dfb-busy-count" class="bg-white text-indigo-800 border border-indigo-300 text-sm font-black px-4 py-1.5 rounded-full shadow-sm">0</span>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-slate-50/30 p-2">
+              <ul id="dfb-busy-list" class="divide-y divide-slate-100">
+                <li class="p-10 text-slate-500 font-bold text-center text-sm">Select dates to see stores with assigned displays and their schedules.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- End In-Store Display Portal Container -->
   </main>
 
   <div id="modal-details" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4 sm:p-6 opacity-0 modal-backdrop">
@@ -416,10 +835,10 @@
           <button onclick="closeModal('modal-details')" class="sm:hidden text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0 shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <div class="flex items-center justify-start sm:justify-end w-full sm:w-auto gap-2 sm:gap-3 shrink-0">
-          <button onclick="previewPDF()" id="btn-preview-pdf" class="flex-1 sm:flex-none justify-center bg-slate-800 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-md">
+          <button onclick="handlePreviewPDF()" id="btn-preview-pdf" class="flex-1 sm:flex-none justify-center bg-slate-800 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-md">
             <i class="fa-solid fa-eye text-white"></i> <span class="hidden sm:inline">Preview PDF</span><span class="sm:inline sm:hidden">Preview</span>
           </button>
-          <button onclick="downloadPDF()" id="btn-download-pdf" class="flex-1 sm:flex-none justify-center bg-brand-800 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-2 shadow-md">
+          <button onclick="handleDownloadPDF()" id="btn-download-pdf" class="flex-1 sm:flex-none justify-center bg-brand-800 text-white px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black hover:bg-brand-900 transition-colors flex items-center gap-2 shadow-md">
             <i class="fa-solid fa-file-pdf text-white"></i> <span class="hidden sm:inline">Export PDF</span><span class="sm:inline sm:hidden">Export</span>
           </button>
           <button onclick="closeModal('modal-details')" class="hidden sm:flex text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 w-10 h-10 rounded-full items-center justify-center transition-colors shrink-0 shadow-sm ml-1"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -437,7 +856,7 @@
           <h2 class="text-lg font-black tracking-tight">PDF Dossier Live Preview</h2>
         </div>
         <div class="flex items-center gap-3">
-          <button onclick="downloadPDF()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-brand-700 transition-colors flex items-center gap-2 shadow-md">
+          <button onclick="handleDownloadPDF()" class="bg-brand-600 text-white px-4 py-2 rounded-xl text-xs font-black hover:bg-brand-700 transition-colors flex items-center gap-2 shadow-md">
             <i class="fa-solid fa-download"></i> Download PDF
           </button>
           <button onclick="closeModal('modal-pdf-preview')" class="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors"><i class="fa-solid fa-xmark"></i></button>
@@ -582,19 +1001,29 @@
     };
 
     let db = null; let auth = null; let storage = null; let user = null;
-    let activations = []; let storeList = []; 
+    let currentPortal = 'landing'; // 'landing', 'activations', 'displays'
+    let activations = []; let displays = []; let storeList = []; 
     let currentActiveTab = 'dashboard';
+    let currentDisplayActiveTab = 'dashboard';
     let selectedStores = new Set();
+    let selectedDisplayStores = new Set();
     let currentViewingActivation = null;
+    let currentViewingDisplay = null;
     let uploadedImagesBase64 = [];
+    let uploadedDisplayImagesBase64 = [];
     let savedPortalLogo = null;
     let editingActivationId = null;
+    let editingDisplayId = null;
     let activationToDelete = null;
+    let displayToDelete = null;
     let selectedActivations = new Set();
+    let selectedDisplays = new Set();
     let deleteActionMode = 'single';
+    let displayDeleteActionMode = 'single';
     let whitelistConfig = { mode: 'ALL', whitelistMap: { 'saad.naiem@gmail.com': true } };
     let pendingWhitelistConfig = null;
     let currentDashboardFilter = 'ALL';
+    let currentDisplayDashboardFilter = 'ALL';
 
     const CatColors = {
       'WELLNESS': 'bg-green-500/10 text-green-700 border-green-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(34,197,94,0.3)] font-black',
@@ -602,6 +1031,28 @@
       'PERSONAL CARE': 'bg-orange-500/10 text-orange-700 border-orange-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(249,115,22,0.3)] font-black',
       'MOM AND BABY': 'bg-blue-500/10 text-blue-700 border-blue-500/30 backdrop-blur-md shadow-[0_0_12px_rgba(59,130,246,0.3)] font-black'
     };
+
+    const BrandPalette = [
+      'bg-indigo-100 text-indigo-900 border-indigo-300',
+      'bg-purple-100 text-purple-900 border-purple-300',
+      'bg-emerald-100 text-emerald-900 border-emerald-300',
+      'bg-pink-100 text-pink-900 border-pink-300',
+      'bg-amber-100 text-amber-900 border-amber-300',
+      'bg-cyan-100 text-cyan-900 border-cyan-300',
+      'bg-rose-100 text-rose-900 border-rose-300',
+      'bg-teal-100 text-teal-900 border-teal-300'
+    ];
+
+    function getBrandBadgeClass(brandStr) {
+      if (!brandStr) return 'bg-slate-100 text-slate-800 border-slate-300';
+      let hash = 0;
+      for (let i = 0; i < brandStr.length; i++) {
+        hash = (hash << 5) - hash + brandStr.charCodeAt(i);
+        hash |= 0;
+      }
+      const idx = Math.abs(hash) % BrandPalette.length;
+      return BrandPalette[idx];
+    }
 
     function calculateOperationalDays(startStr, endStr) {
       if(!startStr || !endStr) return { totalDays: 0, workingDays: 0 };
@@ -672,12 +1123,82 @@
         setupAuthListener();
         fetchStores();
         listenToActivations();
+        listenToDisplays();
         fetchWhitelistConfig();
       } catch (err) {
         console.error(err);
         showToast("Firebase Error. Using local mode.", "error");
         loadLocalData();
       }
+    }
+
+    function selectPortal(portalKey) {
+      currentPortal = portalKey;
+      const landing = document.getElementById('portal-landing');
+      const actPortal = document.getElementById('section-activations-portal');
+      const dispPortal = document.getElementById('section-displays-portal');
+      const backBtn = document.getElementById('btn-back-home');
+      const headerTitle = document.getElementById('header-portal-title');
+      const headerIcon = document.getElementById('header-portal-icon');
+      const headerIconI = document.getElementById('header-icon-i');
+
+      landing.classList.add('hidden');
+      backBtn.classList.remove('hidden');
+
+      if (portalKey === 'activations') {
+        dispPortal.classList.add('hidden');
+        actPortal.classList.remove('hidden');
+        headerTitle.innerText = "In-Store Activation Portal";
+        headerIcon.className = "w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-lg shrink-0 transition-all";
+        headerIconI.className = "fa-solid fa-bolt text-xl sm:text-2xl";
+        switchTab(currentActiveTab);
+      } else if (portalKey === 'displays') {
+        actPortal.classList.add('hidden');
+        dispPortal.classList.remove('hidden');
+        headerTitle.innerText = "In-Store Display Portal";
+        headerIcon.className = "w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center text-white shadow-lg shrink-0 transition-all";
+        headerIconI.className = "fa-solid fa-tv text-xl sm:text-2xl";
+        switchDisplayTab(currentDisplayActiveTab);
+      }
+      updateAuthUIState();
+    }
+
+    function showPortalLanding() {
+      currentPortal = 'landing';
+      document.getElementById('portal-landing').classList.remove('hidden');
+      document.getElementById('section-activations-portal').classList.add('hidden');
+      document.getElementById('section-displays-portal').classList.add('hidden');
+      document.getElementById('btn-back-home').classList.add('hidden');
+      
+      const headerTitle = document.getElementById('header-portal-title');
+      headerTitle.innerText = "In-Store Activation & Display Portal";
+      const headerIcon = document.getElementById('header-portal-icon');
+      headerIcon.className = "w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 flex items-center justify-center text-white shadow-lg shrink-0 transition-all";
+      const headerIconI = document.getElementById('header-icon-i');
+      headerIconI.className = "fa-solid fa-bolt text-xl sm:text-2xl";
+      
+      updateLandingCounts();
+    }
+
+    function updateLandingCounts() {
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      const activeActs = activations.filter(a => {
+        const s = new Date(a.startDate); s.setHours(0,0,0,0);
+        const e = new Date(a.endDate); e.setHours(23,59,59,999);
+        return now >= s && now <= e;
+      }).length;
+      const elAct = document.getElementById('landing-count-activations');
+      if (elAct) elAct.innerText = activeActs;
+
+      const activeDisps = displays.filter(d => {
+        const s = new Date(d.startDate); s.setHours(0,0,0,0);
+        const e = new Date(d.endDate); e.setHours(23,59,59,999);
+        return now >= s && now <= e;
+      }).length;
+      const elDisp = document.getElementById('landing-count-displays');
+      if (elDisp) elDisp.innerText = activeDisps;
     }
 
     function fetchWhitelistConfig() {
@@ -798,30 +1319,17 @@
           localStorage.setItem('isa_email', userEmail);
           
           authSection.innerHTML = `
-            <div class="flex items-center gap-3 bg-white border border-slate-200 py-1.5 px-3 rounded-xl shadow-sm">
-              <img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+user.email}" class="w-8 h-8 rounded-lg shadow-sm" alt="User">
-              <span class="text-sm font-black text-slate-900 hidden sm:block pr-2">${user.displayName || user.email.split('@')[0]}</span>
-              <div class="w-px h-5 bg-slate-200"></div>
-              <button onclick="auth.signOut()" class="text-slate-400 hover:text-red-600 transition-colors p-1.5" title="Sign Out">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <div class="flex items-center gap-1.5 sm:gap-3 bg-white border border-slate-200 py-1 sm:py-1.5 px-2 sm:px-3 rounded-xl shadow-sm">
+              <img src="${user.photoURL || 'https://ui-avatars.com/api/?name='+user.email}" class="w-6 h-6 sm:w-8 sm:h-8 rounded-lg shadow-sm" alt="User">
+              <span class="text-xs sm:text-sm font-black text-slate-900 hidden md:block pr-2">${user.displayName || user.email.split('@')[0]}</span>
+              <div class="hidden sm:block w-px h-4 sm:h-5 bg-slate-200"></div>
+              <button onclick="auth.signOut()" class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Sign Out">
+                <i class="fa-solid fa-arrow-right-from-bracket text-xs sm:text-sm"></i>
               </button>
             </div>
           `;
           
-          if(authWarning) authWarning.classList.add('hidden');
-          if(submitBtn) { submitBtn.disabled = false; checkStoreConflicts(); }
-          
-          if(isMaster) {
-            if(wipeSection) wipeSection.classList.remove('hidden');
-            if(settingsBtn) settingsBtn.classList.remove('hidden');
-            if(exportBtn) exportBtn.classList.remove('hidden');
-            if(manageStoresBtn) manageStoresBtn.classList.remove('hidden');
-          } else {
-            if(wipeSection) wipeSection.classList.add('hidden');
-            if(settingsBtn) settingsBtn.classList.add('hidden');
-            if(exportBtn) exportBtn.classList.add('hidden');
-            if(manageStoresBtn) manageStoresBtn.classList.add('hidden');
-          }
+          updateAuthUIState();
         } else {
           user = null;
           localStorage.removeItem('isa_uid');
@@ -833,19 +1341,20 @@
             </button>
           `;
           
-          if(authWarning) authWarning.classList.remove('hidden');
-          if(submitBtn) submitBtn.disabled = true;
-          if(wipeSection) wipeSection.classList.add('hidden');
-          if(settingsBtn) settingsBtn.classList.add('hidden');
-          if(exportBtn) exportBtn.classList.add('hidden');
-          if(manageStoresBtn) manageStoresBtn.classList.add('hidden');
+          updateAuthUIState();
           
-          if(currentActiveTab === 'new') {
+          if(currentPortal === 'activations' && currentActiveTab === 'new') {
             switchTab('dashboard');
+            showToast("You have been signed out. Access to booking forms is restricted.", "error");
+          }
+          if(currentPortal === 'displays' && currentDisplayActiveTab === 'new') {
+            switchDisplayTab('dashboard');
             showToast("You have been signed out. Access to booking forms is restricted.", "error");
           }
         }
         if(currentActiveTab === 'dashboard') renderDashboard();
+        if(typeof renderDisplayDashboard === 'function') renderDisplayDashboard();
+        updateLandingCounts();
       });
     }
 
@@ -862,6 +1371,7 @@
       db.collection('stores').doc('directory').onSnapshot(doc => {
         storeList = (doc.exists && doc.data().list) ? doc.data().list : [];
         renderStoreCheckboxes();
+        if(typeof renderDisplayStoreCheckboxes === 'function') renderDisplayStoreCheckboxes();
         if(typeof renderManageStoresList === 'function') renderManageStoresList();
       });
     }
@@ -873,6 +1383,18 @@
         snapshot.forEach(doc => activations.push({ id: doc.id, ...doc.data() }));
         activations.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
         if(currentActiveTab === 'dashboard') renderDashboard();
+        updateLandingCounts();
+      });
+    }
+
+    function listenToDisplays() {
+      if (!db) return;
+      db.collection('displays').onSnapshot(snapshot => {
+        displays = [];
+        snapshot.forEach(doc => displays.push({ id: doc.id, ...doc.data() }));
+        displays.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+        if(typeof renderDisplayDashboard === 'function') renderDisplayDashboard();
+        updateLandingCounts();
       });
     }
 
@@ -880,10 +1402,65 @@
       storeList = JSON.parse(localStorage.getItem('isa_stores') || '[]');
       activations = JSON.parse(localStorage.getItem('isa_activations') || '[]');
       activations.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      displays = JSON.parse(localStorage.getItem('isa_displays') || '[]');
+      displays.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+      
       renderStoreCheckboxes();
+      if(typeof renderDisplayStoreCheckboxes === 'function') renderDisplayStoreCheckboxes();
       if(typeof renderManageStoresList === 'function') renderManageStoresList();
       renderDashboard();
+      if(typeof renderDisplayDashboard === 'function') renderDisplayDashboard();
+      updateLandingCounts();
     }
+
+    function updateAuthUIState() {
+      const userEmail = (user && user.email ? user.email : (localStorage.getItem('isa_email') || '')).toLowerCase();
+      const isMaster = (userEmail === 'saad.naiem@gmail.com');
+      const isAuthenticated = !!user || !db;
+
+      // Activations
+      const authWarning = document.getElementById('auth-warning');
+      const submitBtn = document.getElementById('btn-submit');
+      const wipeSection = document.getElementById('master-wipe-section');
+      const settingsBtn = document.getElementById('btn-portal-settings');
+      const exportBtn = document.getElementById('btn-export-csv');
+      const manageStoresBtn = document.getElementById('btn-manage-stores');
+
+      // Displays
+      const dauthWarning = document.getElementById('dauth-warning');
+      const dsubmitBtn = document.getElementById('dbtn-submit');
+      const dwipeSection = document.getElementById('dmaster-wipe-section');
+      const dmanageStoresBtn = document.getElementById('dbtn-manage-stores');
+
+      if (isAuthenticated) {
+        if(authWarning) authWarning.classList.add('hidden');
+        if(dauthWarning) dauthWarning.classList.add('hidden');
+        if(submitBtn) { submitBtn.disabled = false; checkStoreConflicts(); }
+        if(dsubmitBtn) { dsubmitBtn.disabled = false; }
+      } else {
+        if(authWarning) authWarning.classList.remove('hidden');
+        if(dauthWarning) dauthWarning.classList.remove('hidden');
+        if(submitBtn) submitBtn.disabled = true;
+        if(dsubmitBtn) dsubmitBtn.disabled = true;
+      }
+
+      if (isMaster) {
+        if(wipeSection) wipeSection.classList.remove('hidden');
+        if(settingsBtn) settingsBtn.classList.remove('hidden');
+        if(exportBtn) exportBtn.classList.remove('hidden');
+        if(manageStoresBtn) manageStoresBtn.classList.remove('hidden');
+        if(dwipeSection) dwipeSection.classList.remove('hidden');
+        if(dmanageStoresBtn) dmanageStoresBtn.classList.remove('hidden');
+      } else {
+        if(wipeSection) wipeSection.classList.add('hidden');
+        if(settingsBtn) settingsBtn.classList.add('hidden');
+        if(exportBtn) exportBtn.classList.add('hidden');
+        if(manageStoresBtn) manageStoresBtn.classList.add('hidden');
+        if(dwipeSection) dwipeSection.classList.add('hidden');
+        if(dmanageStoresBtn) dmanageStoresBtn.classList.add('hidden');
+      }
+    }
+
 
     function addSingleStore() {
       const input = document.getElementById('manual-store-input');
@@ -1041,13 +1618,13 @@
       const cActive = document.getElementById('card-active');
       const cStores = document.getElementById('card-stores');
       
-      if (cTotal) cTotal.classList.remove('ring-4', 'ring-blue-400', 'ring-blue-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(59,130,246,0.6)]', 'shadow-[0_0_25px_rgba(59,130,246,0.5)]', 'z-20');
-      if (cActive) cActive.classList.remove('ring-4', 'ring-emerald-400', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(16,185,129,0.6)]', 'shadow-[0_0_25px_rgba(16,185,129,0.5)]', 'z-20');
-      if (cStores) cStores.classList.remove('ring-4', 'ring-purple-400', 'ring-purple-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(168,85,247,0.6)]', 'shadow-[0_0_25px_rgba(168,85,247,0.5)]', 'z-20');
+      if (cTotal) cTotal.classList.remove('ring-4', 'ring-blue-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_10px_30px_rgba(37,99,235,0.6)]', 'z-20');
+      if (cActive) cActive.classList.remove('ring-4', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_10px_30px_rgba(5,150,105,0.6)]', 'z-20');
+      if (cStores) cStores.classList.remove('ring-4', 'ring-purple-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_10px_30px_rgba(147,51,234,0.6)]', 'z-20');
 
-      if (cardId === 'card-total' && cTotal) cTotal.classList.add('ring-4', 'ring-blue-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(59,130,246,0.5)]', 'z-20');
-      if (cardId === 'card-active' && cActive) cActive.classList.add('ring-4', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(16,185,129,0.5)]', 'z-20');
-      if (cardId === 'card-stores' && cStores) cStores.classList.add('ring-4', 'ring-purple-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(168,85,247,0.5)]', 'z-20');
+      if (cardId === 'card-total' && cTotal) cTotal.classList.add('ring-4', 'ring-blue-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_10px_30px_rgba(37,99,235,0.6)]', 'z-20');
+      if (cardId === 'card-active' && cActive) cActive.classList.add('ring-4', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_10px_30px_rgba(5,150,105,0.6)]', 'z-20');
+      if (cardId === 'card-stores' && cStores) cStores.classList.add('ring-4', 'ring-purple-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_10px_30px_rgba(147,51,234,0.6)]', 'z-20');
     }
 
     function setDashboardFilter(filter) {
@@ -1094,14 +1671,14 @@
               const uniqueBrands = [...new Set(acts.map(a => a.brandName))];
               const displayBrands = uniqueBrands.slice(0, 3);
               const extraCount = uniqueBrands.length > 3 ? uniqueBrands.length - 3 : 0;
-              const brandBadges = displayBrands.map(b => `<span class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[9px] px-1.5 py-0.5 rounded uppercase font-black shrink-0">${b}</span>`).join('');
+              const brandBadges = displayBrands.map(b => `<span class="${getBrandBadgeClass(b)} text-[9px] px-1.5 py-0.5 rounded uppercase font-black shrink-0 border">${b}</span>`).join('');
               const extraBadge = extraCount > 0 ? `<span class="text-[9px] text-slate-400 font-bold ml-1">+${extraCount} more</span>` : '';
 
               const actsListHtml = acts.map(a => `
                  <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col gap-1.5 cursor-pointer hover:bg-slate-200 transition-colors shadow-sm" onclick="closeModal('modal-stores-analytics'); viewDetails('${a.id}')">
                     <div class="flex items-start justify-between gap-2">
                        <span class="text-xs font-black text-slate-900 leading-tight">${a.activityName}</span>
-                       <span class="text-[9px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0 uppercase">${a.brandName}</span>
+                       <span class="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase shrink-0 ${getBrandBadgeClass(a.brandName)}">${a.brandName}</span>
                     </div>
                     <div class="text-[10px] font-bold text-slate-600 flex items-center gap-1.5"><i class="fa-regular fa-calendar text-slate-400"></i>${fmtDate(a.startDate)} to ${fmtDate(a.endDate)}</div>
                  </div>
@@ -1141,11 +1718,13 @@
           .then(() => {
              showToast(msg, "success");
              if(typeof renderManageStoresList === 'function') renderManageStoresList();
+             if(typeof renderDisplayStoreCheckboxes === 'function') renderDisplayStoreCheckboxes();
           })
           .catch(e => showToast("Failed to save: " + e.message, "error"));
       } else {
          localStorage.setItem('isa_stores', JSON.stringify(storeList));
          renderStoreCheckboxes();
+         if(typeof renderDisplayStoreCheckboxes === 'function') renderDisplayStoreCheckboxes();
          renderManageStoresList();
          showToast(msg + " (Local)", "success");
       }
@@ -1528,11 +2107,60 @@
           }
           selectedActivations.clear();
           showToast("All activations wiped successfully.", "success");
+        } else if (deleteActionMode === 'display-single') {
+          if (!displayToDelete) return;
+          
+          const rowElement = document.getElementById(`drow-${displayToDelete}`);
+          if (rowElement) rowElement.remove();
+          
+          if (db) await db.collection('displays').doc(displayToDelete).delete();
+          else {
+            displays = displays.filter(d => d.id !== displayToDelete);
+            localStorage.setItem('isa_displays', JSON.stringify(displays));
+          }
+          showToast("Display agreement deleted successfully.", "success");
+        } else if (deleteActionMode === 'display-selected') {
+          const idsToDelete = Array.from(selectedDisplays);
+          
+          idsToDelete.forEach(id => {
+            const rowElement = document.getElementById(`drow-${id}`);
+            if(rowElement) rowElement.remove();
+          });
+          
+          if (db) {
+            const batch = db.batch();
+            idsToDelete.forEach(id => {
+              batch.delete(db.collection('displays').doc(id));
+            });
+            await batch.commit();
+          } else {
+            displays = displays.filter(d => !selectedDisplays.has(d.id));
+            localStorage.setItem('isa_displays', JSON.stringify(displays));
+          }
+          selectedDisplays.clear();
+          showToast(`${idsToDelete.length} display(s) deleted successfully.`, "success");
+        } else if (deleteActionMode === 'display-wipe-all') {
+          const tbody = document.getElementById('display-dashboard-table-body');
+          if (tbody) tbody.innerHTML = '';
+          
+          if (db) {
+            const snapshot = await db.collection('displays').get();
+            const batch = db.batch();
+            snapshot.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+          } else {
+            displays = [];
+            localStorage.removeItem('isa_displays');
+          }
+          selectedDisplays.clear();
+          showToast("All display agreements wiped successfully.", "success");
         }
 
         closeModal('modal-delete-confirm');
         closeModal('modal-details');
         if (currentActiveTab === 'dashboard') renderDashboard();
+        if (typeof renderDisplayDashboard === 'function') renderDisplayDashboard();
+        updateLandingCounts();
       } catch (err) {
         showToast("Error performing deletion: " + err.message, "error");
       }
@@ -1788,15 +2416,21 @@
             busyList.innerHTML = '<li class="p-10 text-slate-500 font-bold text-center text-sm">No occupied branches found. All clear!</li>';
         } else {
             busyList.innerHTML = busyStores.map(b => {
-                const actsHtml = b.acts.map(act => `
+                const actsHtml = b.acts.map(act => {
+                    const brandColorBadge = getBrandBadgeClass(act.brandName);
+                    return `
                     <div class="mt-2 bg-rose-50/80 rounded-xl p-3.5 border border-rose-100 shadow-sm ml-8 relative overflow-hidden">
                         <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-400"></div>
-                        <div class="text-xs text-rose-900 font-black uppercase tracking-wider">${act.brandName} <span class="text-rose-400 mx-1">•</span> ${act.activityName}</div>
-                        <div class="text-xs text-rose-700 mt-1.5 font-bold flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                           <span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${brandColorBadge}">${act.brandName}</span>
+                           <span class="text-slate-400">•</span>
+                           <span class="text-xs text-rose-950 font-black">${act.activityName}</span>
+                        </div>
+                        <div class="text-xs text-rose-700 mt-2 font-bold flex items-center gap-2">
                            <i class="fa-regular fa-calendar-xmark text-rose-500"></i> ${fmtDate(act.startDate)} to ${fmtDate(act.endDate)}
                         </div>
                     </div>
-                `).join('');
+                `;}).join('');
                 
                 let freeHtml = '';
                 if (b.freeIntervals && b.freeIntervals.length > 0) {
@@ -1823,6 +2457,7 @@
     }
 
     function viewDetails(id) {
+      currentViewingDisplay = null;
       currentViewingActivation = activations.find(a => a.id === id);
       if(!currentViewingActivation) return;
       const act = currentViewingActivation;
@@ -2531,8 +3166,13 @@
       setTimeout(() => modal.classList.add('hidden'), 300);
       
       if (modalId === 'modal-stores-analytics') {
-         if (currentDashboardFilter === 'ALL') highlightCard('card-total');
-         if (currentDashboardFilter === 'ACTIVE') highlightCard('card-active');
+         if (currentPortal === 'displays') {
+            if (currentDisplayDashboardFilter === 'ALL') highlightDisplayCard('dcard-total');
+            if (currentDisplayDashboardFilter === 'ACTIVE') highlightDisplayCard('dcard-active');
+         } else {
+            if (currentDashboardFilter === 'ALL') highlightCard('card-total');
+            if (currentDashboardFilter === 'ACTIVE') highlightCard('card-active');
+         }
       }
     }
 
@@ -2602,11 +3242,1379 @@
       showToast("CSV Exported Successfully!", "success");
     }
 
+
+    // ==========================================
+    // IN-STORE DISPLAY CORE LOGIC & FUNCTIONS
+    // ==========================================
+
+    function switchDisplayTab(tabId) {
+      if (tabId === 'new' && (!user && db)) {
+        showToast("Authentication Required. Please sign in to book display space.", "error");
+        return;
+      }
+      currentDisplayActiveTab = tabId;
+
+      const icons = {
+        'dashboard': { class: 'fa-chart-pie', color: 'text-purple-500', hover: 'group-hover:text-purple-600' },
+        'new': { class: 'fa-calendar-plus', color: 'text-purple-500', hover: 'group-hover:text-purple-600' },
+        'free-busy': { class: 'fa-map-location-dot', color: 'text-indigo-500', hover: 'group-hover:text-indigo-600' }
+      };
+
+      ['dashboard', 'new', 'free-busy'].forEach(id => {
+        const view = document.getElementById(`dview-${id}`);
+        const btn = document.getElementById(`dtab-${id}`);
+        const icon = document.getElementById(`dicon-${id}`);
+        
+        if (view) {
+          view.classList.add('hidden');
+          view.classList.remove('fade-in');
+        }
+        
+        if (btn) {
+          btn.className = `flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all text-slate-500 hover:text-slate-800 hover:bg-white flex justify-center items-center shrink-0 border border-transparent group shadow-sm`;
+        }
+        
+        if (icon) {
+          icon.className = `fa-solid ${icons[id].class} transition-colors ${icons[id].color} ${icons[id].hover}`;
+        }
+      });
+      
+      const activeView = document.getElementById(`dview-${tabId}`);
+      if (activeView) {
+        activeView.classList.remove('hidden');
+        void activeView.offsetWidth; 
+        activeView.classList.add('fade-in');
+      }
+
+      const activeBtn = document.getElementById(`dtab-${tabId}`);
+      if (activeBtn) {
+        activeBtn.className = `flex-1 min-w-[160px] sm:min-w-[180px] snap-center py-3 sm:py-4 rounded-xl text-sm sm:text-base font-black transition-all shadow-md text-white flex justify-center items-center shrink-0 border border-transparent bg-purple-700 group`;
+      }
+      
+      const activeIcon = document.getElementById(`dicon-${tabId}`);
+      if (activeIcon) {
+        activeIcon.className = `fa-solid ${icons[tabId].class} text-white transition-colors`;
+      }
+
+      if (tabId === 'dashboard') renderDisplayDashboard();
+    }
+
+    function highlightDisplayCard(cardId) {
+      const cTotal = document.getElementById('dcard-total');
+      const cActive = document.getElementById('dcard-active');
+      const cStores = document.getElementById('dcard-stores');
+      
+      if (cTotal) cTotal.classList.remove('ring-4', 'ring-indigo-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(79,70,229,0.5)]', 'z-20');
+      if (cActive) cActive.classList.remove('ring-4', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(5,150,105,0.5)]', 'z-20');
+      if (cStores) cStores.classList.remove('ring-4', 'ring-fuchsia-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(217,70,239,0.5)]', 'z-20');
+
+      if (cardId === 'dcard-total' && cTotal) cTotal.classList.add('ring-4', 'ring-indigo-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(79,70,229,0.5)]', 'z-20');
+      if (cardId === 'dcard-active' && cActive) cActive.classList.add('ring-4', 'ring-emerald-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(5,150,105,0.5)]', 'z-20');
+      if (cardId === 'dcard-stores' && cStores) cStores.classList.add('ring-4', 'ring-fuchsia-300', 'ring-offset-4', 'scale-[1.03]', 'shadow-[0_0_25px_rgba(217,70,239,0.5)]', 'z-20');
+    }
+
+    function setDisplayDashboardFilter(filter) {
+      currentDisplayDashboardFilter = filter;
+      if (filter === 'ALL') highlightDisplayCard('dcard-total');
+      if (filter === 'ACTIVE') highlightDisplayCard('dcard-active');
+      renderDisplayDashboard();
+    }
+
+    function renderDisplayStoreCheckboxes() {
+      const container = document.getElementById('dstore-checkbox-container');
+      if (!container) return;
+      const searchInput = document.getElementById('dstore-search-input');
+      const search = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+      
+      if (storeList.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-500 font-bold text-sm">Directory empty. Use 'Add / Import Stores'.</div>`;
+        return;
+      }
+
+      const filtered = storeList.filter(s => s.toLowerCase().includes(search));
+      container.innerHTML = filtered.map(store => `
+        <label class="flex items-center gap-3 p-3 hover:bg-white rounded-xl cursor-pointer transition-all border border-transparent hover:border-slate-200 mb-1 hover:shadow-sm">
+          <input type="checkbox" value="${store}" onchange="toggleDisplayStore(this)" ${selectedDisplayStores.has(store) ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
+          <span class="text-sm text-slate-900 font-black">${store}</span>
+        </label>
+      `).join('');
+      
+      updateDisplayStoreCount();
+    }
+
+    function toggleDisplayStore(checkbox) {
+      const storeVal = checkbox.value;
+      if (checkbox.checked) {
+        selectedDisplayStores.add(storeVal);
+      } else {
+        selectedDisplayStores.delete(storeVal);
+      }
+      updateDisplayStoreCount();
+    }
+
+    function updateDisplayStoreCount() {
+      const counter = document.getElementById('dstore-selection-count');
+      if (!counter) return;
+      counter.innerText = `${selectedDisplayStores.size} Selected`;
+      counter.className = selectedDisplayStores.size > 0 
+        ? "inline-flex items-center px-3 py-1 rounded-lg text-xs font-black bg-purple-100 text-purple-900 border border-purple-300" 
+        : "inline-flex items-center px-3 py-1 rounded-lg text-xs font-black bg-slate-200 text-slate-800";
+    }
+
+    // Material images for display
+    function setupDisplayImageListener() {
+      const imgInput = document.getElementById('df-image');
+      if (!imgInput || imgInput._hasListener) return;
+      imgInput._hasListener = true;
+      imgInput.addEventListener('change', async function(e) {
+        const files = e.target.files;
+        if(!files || files.length === 0) return;
+
+        showToast(`Processing ${files.length} display image(s)...`, "success");
+
+        for(let i=0; i < files.length; i++) {
+          const file = files[i];
+          const base64 = await processImageFile(file);
+          if (base64) uploadedDisplayImagesBase64.push(base64);
+        }
+        renderDisplayImageGallery();
+        this.value = '';
+      });
+    }
+
+    function renderDisplayImageGallery() {
+      const gallery = document.getElementById('dimage-preview-gallery');
+      if (!gallery) return;
+      if (uploadedDisplayImagesBase64.length === 0) {
+        gallery.innerHTML = '';
+        return;
+      }
+      gallery.innerHTML = uploadedDisplayImagesBase64.map((b64, idx) => `
+        <div class="relative w-24 h-24 rounded-xl border border-slate-300 overflow-hidden shadow-sm group">
+          <img src="${b64}" class="w-full h-full object-cover">
+          <button type="button" onclick="removeDisplayImage(${idx})" class="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-md">
+            <i class="fa-solid fa-xmark text-xs"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeDisplayImage(idx) {
+      uploadedDisplayImagesBase64.splice(idx, 1);
+      renderDisplayImageGallery();
+    }
+
+    // Handle Display Submit
+    async function handleDisplaySubmit(e) {
+      e.preventDefault();
+      if (!user && db) return showToast("Sign in required.", "error");
+      if (selectedDisplayStores.size === 0) return showToast("Select at least one store.", "error");
+
+      const sDate = document.getElementById('df-startDate').value;
+      const eDate = document.getElementById('df-endDate').value;
+      if (new Date(sDate) > new Date(eDate)) {
+        return showToast("Start date cannot be after end date.", "error");
+      }
+
+      const btn = document.getElementById('dbtn-submit');
+      const origHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
+
+      const data = {
+        activityName: document.getElementById('df-activityName').value,
+        brandName: document.getElementById('df-brandName').value,
+        vendorName: document.getElementById('df-vendorName').value,
+        category: document.getElementById('df-category').value,
+        activityType: document.getElementById('df-activityType').value,
+        objective: document.getElementById('df-objective').value,
+        description: document.getElementById('df-description').value,
+        startDate: sDate,
+        endDate: eDate,
+        stores: Array.from(selectedDisplayStores),
+        images: uploadedDisplayImagesBase64
+      };
+
+      try {
+        if (editingDisplayId) {
+          if (db) {
+            await db.collection('displays').doc(editingDisplayId).set(data, { merge: true });
+          } else {
+            const idx = displays.findIndex(d => d.id === editingDisplayId);
+            if (idx > -1) {
+              displays[idx] = { ...displays[idx], ...data };
+              localStorage.setItem('isa_displays', JSON.stringify(displays));
+            }
+          }
+          showToast("Display Agreement Saved Successfully!", "success");
+        } else {
+          data.authorId = user ? user.uid : 'local';
+          data.authorEmail = user ? user.email.toLowerCase() : '';
+          data.authorName = user ? (user.displayName || user.email.split('@')[0]) : "Local User";
+          data.createdAt = new Date().toISOString();
+          
+          if (db) await db.collection('displays').add(data);
+          else {
+            data.id = 'disp-' + Date.now();
+            displays.unshift(data);
+            localStorage.setItem('isa_displays', JSON.stringify(displays));
+          }
+          showToast("Display Agreement Scheduled!", "success");
+        }
+        cancelDisplayEdit();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = origHTML;
+      }
+    }
+
+    function cancelDisplayEdit() {
+      editingDisplayId = null;
+      document.getElementById('display-form').reset();
+      selectedDisplayStores.clear();
+      uploadedDisplayImagesBase64 = [];
+      renderDisplayImageGallery();
+      renderDisplayStoreCheckboxes();
+      
+      const btnSubmit = document.getElementById('dbtn-submit');
+      if (btnSubmit) {
+        btnSubmit.innerHTML = '<i class="fa-solid fa-calendar-check"></i> Confirm & Save Display';
+        btnSubmit.disabled = false;
+      }
+      document.getElementById('dbtn-cancel-edit').classList.add('hidden');
+      document.getElementById('dform-section-title').innerText = "Book Display";
+      
+      switchDisplayTab('dashboard');
+    }
+
+    // Display Dashboard Rendering
+    function renderDisplayDashboard() {
+      const searchInput = document.getElementById('search-display-dashboard');
+      const search = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+      
+      let filtered = displays.filter(d => {
+        const fullTextStr = `${d.activityName} ${d.brandName} ${d.vendorName} ${d.category} ${d.activityType} ${d.startDate} ${d.endDate} ${(d.stores || []).join(' ')}`.toLowerCase();
+        return fullTextStr.includes(search);
+      });
+
+      const mTotal = document.getElementById('dmetric-total');
+      if (mTotal) mTotal.innerText = displays.length;
+      
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      const activeCount = displays.filter(d => {
+         const s = new Date(d.startDate); s.setHours(0,0,0,0);
+         const e = new Date(d.endDate); e.setHours(23,59,59,999);
+         return now >= s && now <= e;
+      }).length;
+      const mActive = document.getElementById('dmetric-active');
+      if (mActive) mActive.innerText = activeCount;
+
+      let uniqueStoresSet = new Set();
+      if (currentDisplayDashboardFilter === 'ACTIVE') {
+          const activeFiltered = filtered.filter(d => {
+              const s = new Date(d.startDate); s.setHours(0,0,0,0);
+              const e = new Date(d.endDate); e.setHours(23,59,59,999);
+              return now >= s && now <= e;
+          });
+          activeFiltered.forEach(d => { if(d.stores) d.stores.forEach(st => uniqueStoresSet.add(st)); });
+          filtered = activeFiltered; 
+      } else {
+          filtered.forEach(d => { if(d.stores) d.stores.forEach(st => uniqueStoresSet.add(st)); });
+      }
+
+      const mStores = document.getElementById('dmetric-stores');
+      if (mStores) mStores.innerText = uniqueStoresSet.size;
+
+      const tbody = document.getElementById('display-dashboard-table-body');
+      if (!tbody) return;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        document.getElementById('display-dashboard-empty-state').classList.remove('hidden');
+        updateDisplayBulkActionBar();
+        return;
+      }
+      
+      document.getElementById('display-dashboard-empty-state').classList.add('hidden');
+      
+      const sortedFiltered = filtered.sort((a, b) => {
+        const aStart = new Date(a.startDate); const aEnd = new Date(a.endDate);
+        const bStart = new Date(b.startDate); const bEnd = new Date(b.endDate);
+        
+        aStart.setHours(0,0,0,0); aEnd.setHours(23,59,59,999);
+        bStart.setHours(0,0,0,0); bEnd.setHours(23,59,59,999);
+        
+        const aActive = (now >= aStart && now <= aEnd);
+        const bActive = (now >= bStart && now <= bEnd);
+        
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+        return aStart - bStart;
+      });
+
+      tbody.innerHTML = sortedFiltered.map(disp => {
+        const catBadge = CatColors[disp.category] || 'bg-slate-100 text-slate-900 border-slate-300 font-black';
+        
+        const RowColors = {
+          'WELLNESS': 'bg-green-50/40 hover:bg-green-50',
+          'BEAUTY': 'bg-purple-50/40 hover:bg-purple-50',
+          'PERSONAL CARE': 'bg-orange-50/40 hover:bg-orange-50',
+          'MOM AND BABY': 'bg-blue-50/40 hover:bg-blue-50'
+        };
+        const rowColorClass = RowColors[disp.category] || 'bg-white hover:bg-slate-50';
+
+        const firstImage = (disp.images && disp.images.length > 0) ? disp.images[0] : (disp.image ? disp.image : null);
+        const imageThumbHtml = firstImage 
+          ? `<img src="${firstImage}" class="w-12 h-12 rounded-xl object-cover shadow-sm border border-slate-300 shrink-0">` 
+          : `<div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-400 shadow-inner shrink-0"><i class="fa-solid fa-tv"></i></div>`;
+
+        const daysCalc = calculateOperationalDays(disp.startDate, disp.endDate);
+
+        const storesTags = (disp.stores || []).map(s => `
+          <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-black bg-white text-slate-900 border border-slate-300 shadow-xs">
+            <i class="fa-solid fa-location-dot mr-1 text-purple-600"></i> <span class="truncate max-w-[180px]">${s}</span>
+          </span>
+        `).join('');
+
+        const isSelected = selectedDisplays.has(disp.id);
+        
+        const startDateObj = new Date(disp.startDate);
+        const endDateObj = new Date(disp.endDate);
+        startDateObj.setHours(0,0,0,0);
+        endDateObj.setHours(23,59,59,999);
+        const isActiveNow = (now >= startDateObj && now <= endDateObj);
+
+        return `
+          <tr id="drow-${disp.id}" class="${rowColorClass} transition-colors cursor-pointer" onclick="viewDisplayDetails('${disp.id}')">
+            <td class="px-4 py-5 border-b border-slate-100 w-[5%] text-center" onclick="event.stopPropagation()">
+              <input type="checkbox" onchange="toggleDisplayRowSelection(this, '${disp.id}')" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[25%]">
+              <div class="flex items-center gap-4">
+                ${imageThumbHtml}
+                <div>
+                  <div class="flex flex-col items-start gap-1">
+                    <div class="font-black text-slate-900 text-base leading-tight">${disp.activityName}</div>
+                    ${isActiveNow ? `
+                      <div class="flex items-center gap-2 mt-2">
+                         <div class="relative flex h-3.5 w-3.5 shrink-0 ml-0.5">
+                           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-500 opacity-75"></span>
+                           <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-purple-600"></span>
+                         </div>
+                         <span class="text-[11px] font-black text-purple-800 uppercase tracking-widest leading-none">Active Display</span>
+                      </div>
+                    ` : ''}
+                  </div>
+                  <div class="text-xs text-purple-700 font-black mt-2">${disp.brandName} <span class="text-slate-300 mx-1">•</span> <span class="text-slate-700 font-extrabold">${disp.vendorName || '-'}</span></div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[15%]">
+              <span class="inline-flex px-2.5 py-1 rounded-md text-[10px] border ${catBadge} uppercase tracking-wider">${disp.category || '-'}</span>
+              <div class="text-[11px] text-slate-700 font-black mt-1">${disp.activityType || '-'}</div>
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[20%]">
+              <div class="text-sm font-black text-slate-800"><i class="fa-solid fa-calendar-day text-slate-400 mr-1"></i> ${fmtDate(disp.startDate)} to ${fmtDate(disp.endDate)}</div>
+              <div class="inline-flex px-2.5 py-1 mt-2 bg-purple-700 text-white text-[11px] font-black rounded shadow-sm">${daysCalc.totalDays} Days</div>
+            </td>
+            <td class="px-6 py-5 border-b border-slate-100 w-[25%]">
+              <div class="flex flex-wrap gap-1.5">${storesTags}</div>
+            </td>
+            <td class="px-6 py-5 text-right border-b border-slate-100 w-[10%]">
+              <button class="text-slate-900 font-black text-sm hover:text-white bg-white hover:bg-purple-800 border border-slate-300 hover:border-purple-800 shadow-sm px-4 py-2 rounded-xl transition-all">View</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateDisplayBulkActionBar();
+    }
+
+    function toggleSelectAllDisplays(masterCheckbox) {
+      const searchInput = document.getElementById('search-display-dashboard');
+      const search = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+      const filtered = displays.filter(d => {
+        const fullTextStr = `${d.activityName} ${d.brandName} ${d.vendorName} ${d.category} ${d.activityType} ${d.startDate} ${d.endDate} ${(d.stores || []).join(' ')}`.toLowerCase();
+        return fullTextStr.includes(search);
+      });
+
+      if (masterCheckbox.checked) {
+        filtered.forEach(d => selectedDisplays.add(d.id));
+      } else {
+        filtered.forEach(d => selectedDisplays.delete(d.id));
+      }
+      renderDisplayDashboard();
+    }
+
+    function toggleDisplayRowSelection(checkbox, id) {
+      if (checkbox.checked) {
+        selectedDisplays.add(id);
+      } else {
+        selectedDisplays.delete(id);
+      }
+      updateDisplayBulkActionBar();
+    }
+
+    function updateDisplayBulkActionBar() {
+      const bulkBar = document.getElementById('dmaster-bulk-actions');
+      const countSpan = document.getElementById('dselected-count');
+      if (!bulkBar) return;
+
+      if (selectedDisplays.size > 0) {
+        bulkBar.classList.remove('hidden');
+        bulkBar.classList.add('flex');
+        countSpan.innerText = selectedDisplays.size;
+      } else {
+        bulkBar.classList.remove('flex');
+        bulkBar.classList.add('hidden');
+      }
+
+      const searchInput = document.getElementById('search-display-dashboard');
+      const search = (searchInput && searchInput.value ? searchInput.value : '').toLowerCase();
+      const filtered = displays.filter(d => {
+        const fullTextStr = `${d.activityName} ${d.brandName} ${d.vendorName} ${d.category} ${d.activityType} ${d.startDate} ${d.endDate} ${(d.stores || []).join(' ')}`.toLowerCase();
+        return fullTextStr.includes(search);
+      });
+      const masterCb = document.getElementById('dselect-all-checkbox');
+      if (masterCb) {
+        if (filtered.length > 0 && filtered.every(d => selectedDisplays.has(d.id))) {
+          masterCb.checked = true;
+        } else {
+          masterCb.checked = false;
+        }
+      }
+    }
+
+    function promptDeleteSelectedDisplays() {
+      if(selectedDisplays.size === 0) return;
+      
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid') || 'local';
+      const isMasterAdmin = (cachedEmail === 'saad.naiem@gmail.com');
+      
+      let unauthorizedCount = 0;
+      displays.forEach(d => {
+        if(selectedDisplays.has(d.id)) {
+           const isAuthor = (cachedUid === (d.authorId || 'local') || (d.authorEmail && cachedEmail === d.authorEmail.toLowerCase()));
+           if(!isMasterAdmin && !isAuthor) unauthorizedCount++;
+        }
+      });
+      
+      if(unauthorizedCount > 0) {
+         showToast(`Access Denied: ${unauthorizedCount} selected display(s) do not belong to you.`, "error");
+         return;
+      }
+
+      deleteActionMode = 'display-selected';
+      document.getElementById('delete-modal-title').innerText = `Delete ${selectedDisplays.size} Display(s)?`;
+      document.getElementById('delete-modal-desc').innerText = `Are you sure you want to permanently remove the ${selectedDisplays.size} selected display agreements?`;
+      openModal('modal-delete-confirm');
+    }
+
+    function promptWipeAllDisplays() {
+      deleteActionMode = 'display-wipe-all';
+      document.getElementById('delete-modal-title').innerText = "Wipe All Display Agreements?";
+      document.getElementById('delete-modal-desc').innerText = "WARNING: This will permanently erase ALL scheduled displays across the entire system. This action cannot be undone.";
+      openModal('modal-delete-confirm');
+    }
+
+    function showDisplayStoresAnalytics() {
+      highlightDisplayCard('dcard-stores');
+      let storeData = {};
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      
+      let relevantDisplays = displays;
+      if (currentDisplayDashboardFilter === 'ACTIVE') {
+          relevantDisplays = displays.filter(d => {
+              const s = new Date(d.startDate); s.setHours(0,0,0,0);
+              const e = new Date(d.endDate); e.setHours(23,59,59,999);
+              return now >= s && now <= e;
+          });
+      }
+
+      relevantDisplays.forEach(d => {
+          if(d.stores) {
+              d.stores.forEach(s => {
+                  if (!storeData[s]) storeData[s] = [];
+                  storeData[s].push(d);
+              });
+          }
+      });
+      const sortedStores = Object.entries(storeData).sort((a,b) => b[1].length - a[1].length);
+      
+      const container = document.getElementById('stores-analytics-content');
+      document.getElementById('stores-analytics-desc').innerText = currentDisplayDashboardFilter === 'ACTIVE' 
+          ? "Overview of unique branch locations currently assigned to ACTIVE display agreements today." 
+          : "Overview of unique branch locations currently assigned to display agreements.";
+
+      if (sortedStores.length === 0) {
+          container.innerHTML = `<div class="col-span-1 sm:col-span-2 text-center text-slate-500 font-bold p-8 border-2 border-dashed border-slate-200 rounded-xl">No branches currently assigned to displays in this view.</div>`;
+      } else {
+          container.innerHTML = sortedStores.map(([store, disps], idx) => {
+              const uniqueBrands = [...new Set(disps.map(d => d.brandName))];
+              const displayBrands = uniqueBrands.slice(0, 3);
+              const extraCount = uniqueBrands.length > 3 ? uniqueBrands.length - 3 : 0;
+              const brandBadges = displayBrands.map(b => `<span class="${getBrandBadgeClass(b)} text-[9px] px-1.5 py-0.5 rounded uppercase font-black shrink-0 border">${b}</span>`).join('');
+              const extraBadge = extraCount > 0 ? `<span class="text-[9px] text-slate-400 font-bold ml-1">+${extraCount} more</span>` : '';
+
+              const dispsListHtml = disps.map(d => `
+                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 flex flex-col gap-1.5 cursor-pointer hover:bg-slate-200 transition-colors shadow-sm" onclick="closeModal('modal-stores-analytics'); viewDisplayDetails('${d.id}')">
+                    <div class="flex items-start justify-between gap-2">
+                       <span class="text-xs font-black text-slate-900 leading-tight">${d.activityName}</span>
+                       <span class="text-[9px] font-black px-1.5 py-0.5 rounded border uppercase shrink-0 ${getBrandBadgeClass(d.brandName)}">${d.brandName}</span>
+                    </div>
+                    <div class="text-[10px] font-bold text-slate-600 flex items-center gap-1.5"><i class="fa-regular fa-calendar text-slate-400"></i>${fmtDate(d.startDate)} to ${fmtDate(d.endDate)}</div>
+                 </div>
+              `).join('');
+              
+              return `
+              <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col hover:shadow-md transition-shadow col-span-1 sm:col-span-2">
+                 <div class="p-4 flex justify-between items-center cursor-pointer bg-white gap-2" onclick="document.getElementById('dstore-drilldown-${idx}').classList.toggle('hidden'); this.querySelector('.fa-chevron-down').classList.toggle('rotate-180')">
+                     <div class="flex items-center gap-3 overflow-hidden">
+                         <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-shop text-xs"></i></div>
+                         <span class="font-black text-slate-800 text-sm truncate">${store}</span>
+                         <div class="hidden sm:flex items-center gap-1 shrink-0 ml-2">${brandBadges}${extraBadge}</div>
+                     </div>
+                     <div class="flex items-center gap-3 shrink-0">
+                       <span class="bg-purple-100 text-purple-800 font-black text-xs px-2.5 py-1 rounded-lg border border-purple-200">${disps.length} Display(s)</span>
+                       <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-300"></i>
+                     </div>
+                 </div>
+                 <div class="px-4 pb-3 sm:hidden flex items-center gap-1 flex-wrap cursor-pointer" onclick="document.getElementById('dstore-drilldown-${idx}').classList.toggle('hidden'); this.parentElement.querySelector('.fa-chevron-down').classList.toggle('rotate-180')">
+                     ${brandBadges}${extraBadge}
+                 </div>
+                 <div id="dstore-drilldown-${idx}" class="hidden flex flex-col gap-2 p-3 border-t border-slate-100 bg-slate-50/50">
+                    <p class="text-[10px] uppercase font-black text-slate-500 tracking-wider mb-1 px-1">Assigned Displays</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        ${dispsListHtml}
+                    </div>
+                 </div>
+              </div>
+          `}).join('');
+      }
+      openModal('modal-stores-analytics');
+    }
+
+    // Display Availability Explorer
+    function runDisplayFreeBusyCheck(isManualClick = false) {
+        const startInput = document.getElementById('dfb-startDate').value;
+        const endInput = document.getElementById('dfb-endDate').value;
+        const searchElement = document.getElementById('dfb-search-store');
+        const searchInput = searchElement ? searchElement.value.toLowerCase() : '';
+
+        if (!startInput || !endInput) {
+            if (isManualClick) showToast("Please select both dates to check display availability.", "error");
+            return;
+        }
+
+        const checkStart = new Date(startInput);
+        const checkEnd = new Date(endInput);
+
+        if (checkStart > checkEnd) {
+            if (isManualClick) showToast("Start date must be before end date.", "error");
+            return;
+        }
+
+        let storeBookingsMap = new Map();
+
+        displays.forEach(d => {
+            if (!d.startDate || !d.endDate) return;
+            const dStart = new Date(d.startDate);
+            const dEnd = new Date(d.endDate);
+            if (checkStart <= dEnd && checkEnd >= dStart) {
+                if (d.stores && Array.isArray(d.stores)) {
+                    d.stores.forEach(st => {
+                        if (!storeBookingsMap.has(st)) storeBookingsMap.set(st, []);
+                        storeBookingsMap.get(st).push({ start: dStart, end: dEnd, disp: d });
+                    });
+                }
+            }
+        });
+
+        let freeStores = [];
+        let busyStores = [];
+
+        storeList.forEach(st => {
+            if (searchInput && !st.toLowerCase().includes(searchInput)) return;
+
+            if (storeBookingsMap.has(st)) {
+                busyStores.push({ store: st, disps: storeBookingsMap.get(st).map(b => b.disp) });
+            } else {
+                freeStores.push(st);
+            }
+        });
+
+        document.getElementById('dfb-free-count').innerText = freeStores.length;
+        document.getElementById('dfb-busy-count').innerText = busyStores.length;
+
+        const freeList = document.getElementById('dfb-free-list');
+        if (freeStores.length === 0) {
+            freeList.innerHTML = '<li class="p-10 text-slate-500 font-bold text-center text-sm">No branches without displays found for this search.</li>';
+        } else {
+            freeList.innerHTML = freeStores.map(storeName => `
+                <li class="px-5 py-3 text-sm font-black text-slate-900 bg-white hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 flex flex-col">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-store text-purple-600 text-xs"></i></div> 
+                        <span>${storeName}</span>
+                        <span class="bg-purple-100 text-purple-800 border border-purple-300 text-[10px] px-2 py-0.5 rounded font-black ml-auto">No Active Displays</span>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        const busyList = document.getElementById('dfb-busy-list');
+        if (busyStores.length === 0) {
+            busyList.innerHTML = '<li class="p-10 text-slate-500 font-bold text-center text-sm">No stores with active displays found in selected period.</li>';
+        } else {
+            busyList.innerHTML = busyStores.map(b => {
+                const dispsHtml = b.disps.map(disp => {
+                    const brandColorBadge = getBrandBadgeClass(disp.brandName);
+                    return `
+                    <div class="mt-2 bg-purple-50/80 rounded-xl p-3.5 border border-purple-100 shadow-sm ml-8 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-purple-600"></div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                           <span class="text-[10px] font-black px-2 py-0.5 rounded border uppercase tracking-wider ${brandColorBadge}">${disp.brandName}</span>
+                           <span class="text-slate-400">•</span>
+                           <span class="text-xs text-purple-950 font-black">${disp.activityName}</span>
+                        </div>
+                        <div class="text-xs text-purple-700 mt-2 font-bold flex items-center gap-2">
+                           <i class="fa-regular fa-calendar-check text-purple-500"></i> ${fmtDate(disp.startDate)} to ${fmtDate(disp.endDate)}
+                        </div>
+                    </div>
+                `;}).join('');
+                
+                return `
+                <li class="px-5 py-4 bg-white hover:bg-slate-50/50 transition-colors flex flex-col gap-1 border-b border-slate-100 last:border-0">
+                    <div class="flex items-center gap-3 text-sm font-black text-slate-900"><div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center shrink-0"><i class="fa-solid fa-store text-purple-600 text-xs"></i></div> ${b.store}</div>
+                    ${dispsHtml}
+                </li>
+                `;
+            }).join('');
+        }
+    }
+
+    // View Display Details Modal
+    function getDisplayRefStr(disp) {
+      const dObj = disp.createdAt ? new Date(disp.createdAt) : new Date();
+      const yr = dObj.getFullYear();
+      const mo = String(dObj.getMonth() + 1).padStart(2, '0');
+      
+      const sameMonthDisps = displays.filter(d => {
+        const dd = d.createdAt ? new Date(d.createdAt) : new Date();
+        return dd.getFullYear() === yr && dd.getMonth() === dObj.getMonth();
+      }).sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+      
+      const dispIndex = sameMonthDisps.findIndex(d => d.id === disp.id);
+      const seqNum = String((dispIndex !== -1 ? dispIndex : 0) + 1).padStart(2, '0');
+      return `DSP-${yr}-${mo}-${seqNum}`;
+    }
+
+    function viewDisplayDetails(id) {
+      currentViewingDisplay = displays.find(d => d.id === id);
+      if(!currentViewingDisplay) return;
+      currentViewingActivation = null; // Clear activation viewing
+      const disp = currentViewingDisplay;
+      const catBadge = CatColors[disp.category] || 'bg-slate-100 text-slate-900 border-slate-300 font-black';
+      
+      const dispAuthorId = disp.authorId || 'local'; 
+      const dispAuthorEmail = (disp.authorEmail || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid');
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const currentUserId = user ? user.uid : (cachedUid || 'local');
+      const currentUserEmail = user ? user.email.toLowerCase() : cachedEmail;
+      
+      const isMasterAdmin = (currentUserEmail === 'saad.naiem@gmail.com');
+      const isAuthor = (currentUserId === dispAuthorId || (dispAuthorEmail && currentUserEmail === dispAuthorEmail));
+      const canManage = isMasterAdmin || isAuthor;
+
+      const btnEditClass = canManage 
+        ? "bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 cursor-pointer shadow-sm" 
+        : "bg-slate-100 text-slate-400 border border-slate-200 opacity-55 cursor-not-allowed";
+
+      const btnDeleteClass = canManage 
+        ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-100 cursor-pointer shadow-sm" 
+        : "bg-slate-100 text-slate-400 border border-slate-200 opacity-55 cursor-not-allowed";
+
+      const authorActionsHtml = `
+        <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-200">
+          <button onclick="attemptDisplayEdit()" class="${btnEditClass} px-5 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Display ${!canManage ? '<i class="fa-solid fa-lock text-xs ml-1"></i>' : ''}
+          </button>
+          <button onclick="attemptDisplayDelete()" class="${btnDeleteClass} px-5 py-2.5 rounded-xl text-sm font-black transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-trash-can"></i> Delete ${!canManage ? '<i class="fa-solid fa-lock text-xs ml-1"></i>' : ''}
+          </button>
+        </div>
+      `;
+
+      const descriptionFormatted = (disp.description || 'No additional specifications provided.').replace(/\n/g, '<br/>');
+      const objectiveFormatted = (disp.objective || '-').replace(/\n/g, '<br/>');
+      
+      const daysCalc = calculateOperationalDays(disp.startDate, disp.endDate);
+
+      const storesListHtml = (disp.stores || []).map(s => `
+        <li class="px-3.5 py-2.5 text-xs font-black text-slate-900 bg-white border border-slate-200 shadow-xs rounded-xl flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 truncate">
+             <i class="fa-solid fa-location-dot text-purple-600 shrink-0"></i> <span class="truncate">${s}</span>
+          </div>
+        </li>
+      `).join('');
+
+      document.getElementById('modal-details-content').innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 flex flex-col gap-6">
+            <div>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-900 border border-purple-300 uppercase tracking-widest">In-Store Display Agreement</span>
+                <span class="text-xs text-purple-700 font-mono font-black border border-purple-300 bg-purple-50 px-2 py-0.5 rounded">REF: ${getDisplayRefStr(disp)}</span>
+              </div>
+              <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">${disp.activityName}</h1>
+              ${authorActionsHtml}
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200"><p class="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1">Brand</p><p class="font-black text-sm text-slate-900">${disp.brandName}</p></div>
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200"><p class="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1">Category</p><span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] border ${catBadge}">${disp.category || '-'}</span></div>
+              <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200"><p class="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-1">Display Type</p><p class="font-black text-sm text-slate-900">${disp.activityType || '-'}</p></div>
+              <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-4 rounded-2xl shadow-sm border border-purple-200">
+                <p class="text-[10px] text-purple-800 uppercase font-black tracking-wider mb-1">Agreement Duration</p>
+                <p class="font-black text-sm text-slate-900 mb-2">${fmtDate(disp.startDate)} to ${fmtDate(disp.endDate)}</p>
+                <span class="inline-block bg-purple-700 text-white text-[11px] font-black px-2 py-1 rounded shadow-sm">${daysCalc.totalDays} Days</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <h3 class="font-black text-sm text-slate-900 border-b border-slate-200 pb-2 mb-3 uppercase tracking-wider text-purple-800">Display Objective</h3>
+              <div class="text-sm text-slate-800 font-black leading-relaxed break-words">${objectiveFormatted}</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+              <h3 class="font-black text-sm text-slate-900 border-b border-slate-200 pb-2 mb-3 uppercase tracking-wider text-purple-800">Specifications & Placement Scope</h3>
+              <div class="text-sm text-slate-800 font-black leading-relaxed break-words">${descriptionFormatted}</div>
+            </div>
+            
+            ${(disp.images || (disp.image ? [disp.image] : [])).length > 0 ? `
+              <div>
+                <h3 class="font-black text-sm text-slate-900 mb-3 uppercase tracking-wider text-purple-800">Attached Materials & Artwork</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                   ${(disp.images || (disp.image ? [disp.image] : [])).map(img => `<img src="${img}" class="w-full h-32 object-cover rounded-2xl border border-slate-300 shadow-sm cursor-pointer hover:opacity-90 transition-opacity" onclick="window.open('${img}', '_blank')" alt="Display Material">`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-glass flex flex-col h-full max-h-[800px]">
+              <div class="p-5 border-b border-slate-200 bg-slate-50"><h3 class="font-black text-slate-900 text-sm uppercase tracking-wider">Confirmed Store Locations (${disp.stores ? disp.stores.length : 0})</h3></div>
+              <div class="p-3 flex-1 overflow-y-auto"><ul class="space-y-2">${storesListHtml}</ul></div>
+            </div>
+          </div>
+        </div>
+      `;
+      openModal('modal-details');
+    }
+
+    function attemptDisplayEdit() {
+      if (!currentViewingDisplay) return;
+      const disp = currentViewingDisplay;
+      const dispAuthorId = disp.authorId || 'local';
+      const dispAuthorEmail = (disp.authorEmail || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid');
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const currentUserId = user ? user.uid : (cachedUid || 'local');
+      const currentUserEmail = user ? user.email.toLowerCase() : cachedEmail;
+      
+      const isMasterAdmin = (currentUserEmail === 'saad.naiem@gmail.com');
+      const isAuthor = (currentUserId === dispAuthorId || (dispAuthorEmail && currentUserEmail === dispAuthorEmail));
+
+      if (!isMasterAdmin && !isAuthor) {
+        showToast("Access Denied: Only the original creator or Master Admin can edit this display agreement.", "error");
+        return;
+      }
+      editDisplay();
+    }
+
+    function editDisplay() {
+      const disp = currentViewingDisplay;
+      editingDisplayId = disp.id;
+      
+      document.getElementById('df-activityName').value = disp.activityName || '';
+      document.getElementById('df-brandName').value = disp.brandName || '';
+      document.getElementById('df-vendorName').value = disp.vendorName || '';
+      document.getElementById('df-category').value = disp.category || '';
+      document.getElementById('df-activityType').value = disp.activityType || '';
+      document.getElementById('df-objective').value = disp.objective || '';
+      document.getElementById('df-description').value = disp.description || '';
+      document.getElementById('df-startDate').value = disp.startDate || '';
+      document.getElementById('df-endDate').value = disp.endDate || '';
+      
+      selectedDisplayStores = new Set(disp.stores || []);
+      uploadedDisplayImagesBase64 = [...(disp.images || (disp.image ? [disp.image] : []))];
+      
+      renderDisplayStoreCheckboxes();
+      renderDisplayImageGallery();
+      
+      document.getElementById('dbtn-submit').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update & Save Display';
+      document.getElementById('dbtn-submit').disabled = false;
+      document.getElementById('dbtn-cancel-edit').classList.remove('hidden');
+      document.getElementById('dform-section-title').innerText = "Edit Display Agreement";
+      
+      closeModal('modal-details');
+      switchDisplayTab('new');
+    }
+
+    function attemptDisplayDelete() {
+      if (!currentViewingDisplay) return;
+      const disp = currentViewingDisplay;
+      const dispAuthorId = disp.authorId || 'local';
+      const dispAuthorEmail = (disp.authorEmail || '').toLowerCase();
+      const cachedUid = localStorage.getItem('isa_uid');
+      const cachedEmail = (localStorage.getItem('isa_email') || '').toLowerCase();
+      const currentUserId = user ? user.uid : (cachedUid || 'local');
+      const currentUserEmail = user ? user.email.toLowerCase() : cachedEmail;
+      
+      const isMasterAdmin = (currentUserEmail === 'saad.naiem@gmail.com');
+      const isAuthor = (currentUserId === dispAuthorId || (dispAuthorEmail && currentUserEmail === dispAuthorEmail));
+
+      if (!isMasterAdmin && !isAuthor) {
+        showToast("Access Denied: Only the original creator or Master Admin can delete this display agreement.", "error");
+        return;
+      }
+      displayToDelete = disp.id;
+      deleteActionMode = 'display-single';
+      document.getElementById('delete-modal-title').innerText = "Delete Display Agreement?";
+      document.getElementById('delete-modal-desc').innerText = "This action cannot be undone. Are you sure you want to permanently remove this scheduled display?";
+      openModal('modal-delete-confirm');
+    }
+
+    // Unified Preview & PDF generation dispatchers
+    async function handlePreviewPDF() {
+      if (currentPortal === 'displays' || currentViewingDisplay) {
+        await previewDisplayPDF();
+      } else {
+        await previewPDF();
+      }
+    }
+
+    async function handleDownloadPDF() {
+      if (currentPortal === 'displays' || currentViewingDisplay) {
+        await downloadDisplayPDF();
+      } else {
+        await downloadPDF();
+      }
+    }
+
+    // PDF Live Preview for Display
+    async function previewDisplayPDF() {
+      const disp = currentViewingDisplay;
+      if (!disp) return;
+      showToast("Generating live preview...", "success");
+
+      const logoB64 = await getLogoBase64();
+      const refStr = getDisplayRefStr(disp);
+      const printDateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const imagesList = disp.images || (disp.image ? [disp.image] : []);
+      
+      const daysCalc = calculateOperationalDays(disp.startDate, disp.endDate);
+      
+      const descHtml = (disp.description || 'No additional details provided.').replace(/\n/g, '<br/>');
+      const objHtml = (disp.objective || '-').replace(/\n/g, '<br/>');
+
+      const previewContainer = document.getElementById('pdf-preview-container');
+      
+      previewContainer.innerHTML = `
+        <div class="flex flex-col min-h-[270mm] pb-6 border-b border-dashed border-slate-300">
+          <div class="shrink-0 flex justify-between items-start pb-4 border-b border-slate-200">
+            <div class="flex items-center gap-4">
+              ${logoB64 ? `<img src="${logoB64}" class="h-[48px] w-auto max-w-[200px] object-contain">` : `<div class="w-12 h-12 bg-[#2e7d32] rounded-xl flex items-center justify-center text-white font-black text-xl">H</div>`}
+            </div>
+            <div class="text-right">
+              <h3 class="font-black text-xl text-slate-900 tracking-wider">IN-STORE DISPLAY APPROVAL</h3>
+              <p class="text-sm font-black text-purple-700 mt-1">REF: <span class="text-purple-800 font-extrabold">${refStr}</span> | Date: ${printDateStr}</p>
+            </div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 mt-5">
+            <h1 class="text-3xl font-black text-slate-900">${disp.activityName}</h1>
+            <p class="text-sm font-black text-purple-800 uppercase tracking-widest">BRAND: ${disp.brandName}</p>
+            <div class="grid grid-cols-2 gap-5 pt-2 text-base">
+              <div><strong class="text-slate-500 text-xs block mb-1">Product Category:</strong> <span class="font-black text-slate-900">${disp.category || '-'}</span></div>
+              <div><strong class="text-slate-500 text-xs block mb-1">Vendor / Partner:</strong> <span class="font-black text-slate-900">${disp.vendorName || '-'}</span></div>
+              <div><strong class="text-slate-500 text-xs block mb-1">Display Type:</strong> <span class="font-black text-slate-900">${disp.activityType || '-'}</span></div>
+              <div>
+                <strong class="text-slate-500 text-xs block mb-1">Schedule Duration:</strong> 
+                <span class="font-black text-purple-700 block">${fmtDate(disp.startDate)} to ${fmtDate(disp.endDate)}</span>
+                <span class="inline-block bg-purple-700 text-white text-xs font-black px-2 py-1 rounded shadow-sm mt-2">${daysCalc.totalDays} Days</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 mt-4">
+            <h4 class="text-sm font-black text-purple-800 uppercase tracking-widest">Display Objective</h4>
+            <div class="text-base font-black text-slate-800 leading-relaxed break-words">${objHtml}</div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 mt-4">
+            <h4 class="text-sm font-black text-purple-800 uppercase tracking-widest">Specifications & Placement Scope</h4>
+            <div class="text-base font-black text-slate-800 leading-relaxed break-words">${descHtml}</div>
+          </div>
+
+          <div class="shrink-0 bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col mt-4">
+            <h4 class="text-sm font-black text-purple-800 uppercase tracking-widest shrink-0 mb-3">CONFIRMED STORE ALLOCATIONS (${disp.stores ? disp.stores.length : 0})</h4>
+            <ul class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm font-black text-slate-900 overflow-hidden content-start">
+              ${(disp.stores || []).map(s => `<li class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between gap-2 truncate"><div class="flex items-center gap-1.5 truncate"><i class="fa-solid fa-location-dot text-purple-800 shrink-0"></i> <span class="truncate">${s}</span></div></li>`).join('')}
+            </ul>
+          </div>
+          
+          <div class="flex-1 flex flex-col mt-4 pb-2 min-h-[100px]">
+            <h4 class="text-sm font-black text-[#2e7d32] uppercase tracking-widest mb-2 shrink-0">APPROVALS</h4>
+            <table class="w-full flex-1 text-left text-xs border border-[#2e7d32] rounded-xl overflow-hidden h-full">
+              <thead class="bg-[#2e7d32] text-white font-black uppercase tracking-wider text-[11px] shrink-0">
+                <tr>
+                  <th class="p-2.5 border-r border-[#1b5e20] w-[32%]">Role</th>
+                  <th class="p-2.5 border-r border-[#1b5e20] w-[24%]">Name</th>
+                  <th class="p-2.5 border-r border-[#1b5e20] w-[24%]">Signature</th>
+                  <th class="p-2.5 w-[20%]">Date</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white font-black text-slate-900">
+                <tr class="border-b border-slate-200 bg-slate-50 h-[33%]">
+                  <td class="p-2.5 border-r border-slate-200 text-[11px]">Senior Marketing Manager</td>
+                  <td class="p-2.5 border-r border-slate-200 font-normal text-slate-700 text-[11px]">Mahmoud Abd Elghany</td>
+                  <td class="p-2.5 border-r border-slate-200"></td>
+                  <td class="p-2.5"></td>
+                </tr>
+                <tr class="border-b border-slate-200 bg-white h-[33%]">
+                  <td class="p-2.5 border-r border-slate-200 text-[11px]">BD Executive Director</td>
+                  <td class="p-2.5 border-r border-slate-200 font-normal text-slate-700 text-[11px]">Tamer El Nahas</td>
+                  <td class="p-2.5 border-r border-slate-200"></td>
+                  <td class="p-2.5"></td>
+                </tr>
+                <tr class="bg-slate-50 h-[33%]">
+                  <td class="p-2.5 border-r border-slate-200 text-[11px]">Operation Executive Director</td>
+                  <td class="p-2.5 border-r border-slate-200 font-normal text-slate-700 text-[11px]">Yazeed Al Otaibi</td>
+                  <td class="p-2.5 border-r border-slate-200"></td>
+                  <td class="p-2.5"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="shrink-0 text-center text-sm text-slate-400 font-bold pt-4">In-Store Display Approval - Al Habib Pharmacy (Page 1 of 2)</div>
+        </div>
+
+        <div class="flex flex-col min-h-[270mm] pt-8">
+          <div class="flex-1 space-y-5">
+            <h4 class="font-black text-lg text-slate-900 uppercase tracking-wider">Attached Display Artwork & Materials (${imagesList.length})</h4>
+            ${imagesList.length === 1 ? `
+              <div class="flex h-[210mm]"><img src="${imagesList[0]}" class="w-full h-full object-cover rounded-2xl border border-slate-300 shadow-sm"></div>
+            ` : imagesList.length === 2 ? `
+              <div class="grid grid-cols-1 gap-4 h-[210mm]">
+                ${imagesList.slice(0, 2).map(img => `<img src="${img}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">`).join('')}
+              </div>
+            ` : imagesList.length === 3 ? `
+              <div class="grid grid-cols-2 gap-4 h-[210mm]">
+                <img src="${imagesList[0]}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">
+                <img src="${imagesList[1]}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">
+                <img src="${imagesList[2]}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm col-span-2">
+              </div>
+            ` : imagesList.length >= 4 ? `
+              <div class="grid grid-cols-2 gap-4 h-[210mm]">
+                ${imagesList.slice(0, 4).map(img => `<img src="${img}" class="w-full h-[100mm] object-cover rounded-2xl border border-slate-300 shadow-sm">`).join('')}
+              </div>
+            ` : `<p class="text-base text-slate-400 italic">No promotional mockup images attached.</p>`}
+          </div>
+          <div class="shrink-0 text-center text-sm text-slate-400 font-bold pt-12 pb-6">In-Store Display Approval - Al Habib Pharmacy (Page 2 of 2)</div>
+        </div>
+      `;
+
+      openModal('modal-pdf-preview');
+    }
+
+    // PDF Download for Display
+    async function downloadDisplayPDF() {
+      const disp = currentViewingDisplay;
+      if (!disp) return;
+      
+      const imagesList = disp.images || (disp.image ? [disp.image] : []); 
+
+      const btn = document.getElementById('btn-download-pdf');
+      if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
+      }
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        
+        const refStr = getDisplayRefStr(disp);
+        const printDateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        const logoBase64 = await getLogoBase64();
+        
+        const daysCalc = calculateOperationalDays(disp.startDate, disp.endDate);
+
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 0, 210, 25, 'F');
+
+        if (logoBase64) {
+          try { doc.addImage(logoBase64, 'PNG', 15, 6, 50, 14); } 
+          catch(e) { console.warn("PDF Image draw error", e); }
+        } else {
+           doc.setFillColor(46, 125, 50);
+           doc.roundedRect(15, 6, 14, 14, 2, 2, 'F');
+           doc.setTextColor(255, 255, 255);
+           doc.text("H", 19, 15);
+        }
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(15);
+        doc.setTextColor(15, 23, 42);
+        doc.text("IN-STORE DISPLAY APPROVAL", 195, 12, { align: "right" });
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(46, 125, 50);
+        doc.text(`REF: ${refStr} | Date: ${printDateStr}`, 195, 18, { align: "right" });
+
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, 30, 180, 68, 4, 4, 'FD');
+
+        // Main Title
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.setTextColor(15, 23, 42);
+        doc.text(disp.activityName, 20, 42);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(46, 125, 50);
+        doc.text(`BRAND: ${disp.brandName.toUpperCase()}`, 20, 50);
+
+        const metaRows = [
+          ["Product Category:", disp.category || '-'],
+          ["Vendor / Partner:", disp.vendorName || '-'],
+          ["Display Type:", disp.activityType || '-'],
+          ["Schedule Duration:", `${fmtDate(disp.startDate)} to ${fmtDate(disp.endDate)}`],
+          ["", `${daysCalc.totalDays} Days`]
+        ];
+
+        let mY = 58;
+        metaRows.forEach(row => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(100, 116, 139);
+          doc.text(row[0], 20, mY);
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          if (row[0] === "Schedule Duration:" || row[0] === "") doc.setTextColor(46, 125, 50);
+          else doc.setTextColor(15, 23, 42);
+          doc.text(row[1], 70, mY);
+          mY += 6.5;
+        });
+
+        let currentY = 102;
+
+        const splitObj = doc.splitTextToSize(disp.objective || '-', 170);
+        const objHeight = splitObj.length * 5.5;
+        const objBoxHeight = objHeight + 14;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, currentY, 180, objBoxHeight, 4, 4, 'FD');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(46, 125, 50);
+        doc.text("Display Objective", 20, currentY + 7);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.text(splitObj, 20, currentY + 13); 
+        currentY += objBoxHeight + 4;
+
+        const splitDesc = doc.splitTextToSize(disp.description || 'No additional details provided.', 170);
+        const descHeight = splitDesc.length * 5.5;
+        const detailBoxHeight = descHeight + 14;
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, currentY, 180, detailBoxHeight, 4, 4, 'FD');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(46, 125, 50);
+        doc.text("Specifications & Placement Scope", 20, currentY + 7);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(51, 65, 85);
+        doc.text(splitDesc, 20, currentY + 13); 
+        currentY += detailBoxHeight + 4;
+
+        const storesArr = disp.stores || [];
+        let numCols = storesArr.length > 18 ? 3 : 2;
+        let rowsNeeded = Math.ceil(storesArr.length / numCols);
+        let rowSpacing = storesArr.length > 27 ? 5.5 : 6.5;
+
+        let storeBoxHeight = 16 + (rowsNeeded * rowSpacing);
+
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(15, currentY, 180, storeBoxHeight, 4, 4, 'FD');
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(46, 125, 50);
+        doc.text(`CONFIRMED STORE ALLOCATIONS (${disp.stores ? disp.stores.length : 0})`, 20, currentY + 7);
+
+        let stY = currentY + 13;
+        let stX = 20;
+        
+        const maxRowsPerCol = Math.floor((storeBoxHeight - 12) / rowSpacing);
+        const maxStoresVisible = Math.max(1, maxRowsPerCol * numCols);
+        let colWidth = 180 / numCols;
+
+        storesArr.slice(0, maxStoresVisible).forEach((st, idx) => {
+          if (idx !== 0 && idx % maxRowsPerCol === 0) { 
+            stX += colWidth; 
+            stY = currentY + 13;
+          }
+          
+          const truncatedSt = st.length > 26 ? st.substring(0, 23) + '...' : st;
+          const storeText = `• ${truncatedSt}`;
+          
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(rowSpacing < 6 ? 9 : 10.5);
+          doc.setTextColor(15, 23, 42);
+          doc.text(storeText, stX, stY);
+          
+          stY += rowSpacing;
+        });
+        
+        if (storesArr.length > maxStoresVisible) {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(9);
+          doc.setTextColor(100, 116, 139);
+          doc.text(`...and ${storesArr.length - maxStoresVisible} more branch locations.`, 20, currentY + storeBoxHeight - 3);
+        }
+
+        let currentTableY = currentY + storeBoxHeight + 4;
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(46, 125, 50); 
+        doc.text("APPROVALS", 15, currentTableY + 4);
+
+        currentTableY += 6;
+        
+        let tableTotalHeight = 280 - currentTableY;
+        if (tableTotalHeight < 36) tableTotalHeight = 36;
+
+        const headerHeight = 7;
+        let rowHeight = (tableTotalHeight - headerHeight) / 3;
+
+        const cols = [15, 68, 115, 165, 195];
+
+        doc.setFillColor(46, 125, 50);
+        doc.rect(15, currentTableY, 180, headerHeight, 'FD'); 
+        doc.setDrawColor(203, 213, 225);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9.5); 
+        doc.setTextColor(255, 255, 255);
+        doc.text("Role", 18, currentTableY + 5);
+        doc.text("Name", 71, currentTableY + 5);
+        doc.text("Signature", 118, currentTableY + 5);
+        doc.text("Date", 168, currentTableY + 5);
+        
+        cols.forEach(x => doc.line(x, currentTableY, x, currentTableY + headerHeight));
+        currentTableY += headerHeight;
+        
+        const approvalRows = [
+          ["Senior Marketing Manager", "Mahmoud Abd Elghany", "", ""],
+          ["BD Executive Director", "Tamer El Nahas", "", ""],
+          ["Operation Executive Director", "Yazeed Al Otaibi", "", ""]
+        ];
+
+        approvalRows.forEach((row, i) => {
+          doc.setFillColor(i % 2 === 0 ? 248 : 255, i % 2 === 0 ? 250 : 255, i % 2 === 0 ? 252 : 255);
+          doc.rect(15, currentTableY, 180, rowHeight, 'FD'); 
+          cols.forEach(x => doc.line(x, currentTableY, x, currentTableY + rowHeight));
+          
+          let textYCenter = currentTableY + (rowHeight / 2) + 1.5;
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(9); 
+          doc.setTextColor(15, 23, 42);
+          doc.text(row[0], 18, textYCenter);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9); 
+          doc.setTextColor(51, 65, 85);
+          doc.text(row[1], 71, textYCenter); 
+
+          currentTableY += rowHeight;
+        });
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.setTextColor(148, 163, 184);
+        doc.text("In-Store Display Approval - Al Habib Pharmacy (Page 1 of 2)", 105, 287, { align: "center" });
+
+        doc.addPage();
+        doc.setFillColor(248, 250, 252);
+        doc.rect(0, 0, 210, 20, 'F');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(46, 125, 50);
+        doc.text("IN-STORE DISPLAY APPROVAL", 15, 14);
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`Attached Promotional Artwork & Materials (${imagesList.length})`, 15, 30);
+
+        if (imagesList.length > 0) {
+          const maxImg = Math.min(imagesList.length, 4);
+          for(let i = 0; i < maxImg; i++) {
+            let imgX, imgY, imgW, imgH;
+
+            if (maxImg === 1) {
+              imgX = 15; imgY = 40; imgW = 180; imgH = 230;
+            } else if (maxImg === 2) {
+              imgX = 15; imgY = 40 + (i * 120); imgW = 180; imgH = 110;
+            } else if (maxImg === 3) {
+              if (i < 2) { 
+                imgX = 15 + (i * 95); imgY = 40; imgW = 85; imgH = 110; 
+              } else { 
+                imgX = 15; imgY = 160; imgW = 180; imgH = 110; 
+              }
+            } else {
+              imgX = 15 + ((i % 2) * 95); 
+              imgY = 40 + (Math.floor(i / 2) * 120); 
+              imgW = 85; imgH = 110;
+            }
+
+            try {
+              doc.addImage(imagesList[i], 'JPEG', imgX, imgY, imgW, imgH);
+            } catch(e) {
+              doc.setFillColor(241, 245, 249);
+              doc.rect(imgX, imgY, imgW, imgH, 'F');
+              doc.setFontSize(11);
+              doc.text("Image rendering error", imgX + (imgW/2) - 20, imgY + (imgH/2));
+            }
+          }
+        } else {
+          doc.setFont("helvetica", "italic");
+          doc.setFontSize(11.5);
+          doc.setTextColor(148, 163, 184);
+          doc.text("No promotional mockup images attached to this agreement.", 15, 42);
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(148, 163, 184);
+        doc.text("In-Store Display Approval - Al Habib Pharmacy (Page 2 of 2)", 105, 287, { align: "center" });
+
+        doc.save(`Display_${disp.brandName}_${refStr}.pdf`);
+        showToast("Display PDF Approval Exported Successfully!", "success");
+      } catch (err) {
+        console.error(err);
+        showToast("Failed to generate Display PDF: " + err.message, "error");
+      } finally {
+        if(btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-file-pdf text-white"></i> Export PDF';
+        }
+      }
+    }
+
+    // Unified CSV Exporter
+    function handleCsvExport() {
+      if (currentPortal === 'displays') {
+        exportDisplaysToCSV();
+      } else {
+        exportToCSV();
+      }
+    }
+
+    function exportDisplaysToCSV() {
+      if(displays.length === 0) return showToast("No display data to export.", "error");
+      
+      const headers = [
+          "Start Date", "End Date", "Month of Agreement", "Year of Agreement",
+          "Display Title", "Brand Name", "Product Category", "Display Type", "Vendor / Partner",
+          "Duration (Total Days)", "Duration (Working Days)", "Total Number of Stores",
+          "Status", "Booked By (Email)", "Store Names"
+      ];
+
+      const rows = [headers];
+      const now = new Date();
+      now.setHours(0,0,0,0);
+
+      displays.forEach(disp => {
+          const sDate = new Date(disp.startDate);
+          const eDate = new Date(disp.endDate);
+          sDate.setHours(0,0,0,0);
+          eDate.setHours(23,59,59,999);
+          
+          let status = "Upcoming";
+          if (now > eDate) status = "Completed";
+          else if (now >= sDate && now <= eDate) status = "Active";
+
+          const month = sDate.toLocaleString('en-US', { month: 'long' });
+          const year = sDate.getFullYear();
+          
+          const daysCalc = calculateOperationalDays(disp.startDate, disp.endDate);
+          const totalDays = daysCalc.totalDays;
+          const workingDays = daysCalc.workingDays;
+          const totalStores = disp.stores ? disp.stores.length : 0;
+          const storesList = disp.stores ? disp.stores.join(" | ") : "";
+
+          const row = [
+              `"${disp.startDate || ''}"`,
+              `"${disp.endDate || ''}"`,
+              `"${month}"`,
+              `"${year}"`,
+              `"${(disp.activityName || '').replace(/"/g, '""')}"`,
+              `"${(disp.brandName || '').replace(/"/g, '""')}"`,
+              `"${disp.category || ''}"`,
+              `"${(disp.activityType || '').replace(/"/g, '""')}"`,
+              `"${(disp.vendorName || '').replace(/"/g, '""')}"`,
+              totalDays,
+              workingDays,
+              totalStores,
+              `"${status}"`,
+              `"${disp.authorEmail || 'Local'}"`,
+              `"${storesList}"`
+          ];
+          rows.push(row);
+      });
+
+      const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `In_Store_Displays_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Display CSV Exported Successfully!", "success");
+    }
+
     window.onload = function() {
       initFirebase();
       const todayStr = new Date().toISOString().split('T')[0];
-      document.getElementById('f-startDate').min = todayStr;
-      document.getElementById('f-endDate').min = todayStr;
+      const actStart = document.getElementById('f-startDate');
+      const actEnd = document.getElementById('f-endDate');
+      if (actStart) actStart.min = todayStr;
+      if (actEnd) actEnd.min = todayStr;
+      
+      const dispStart = document.getElementById('df-startDate');
+      const dispEnd = document.getElementById('df-endDate');
+      if (dispStart) dispStart.min = todayStr;
+      if (dispEnd) dispEnd.min = todayStr;
+
+      setupDisplayImageListener();
+      showPortalLanding();
       setTimeout(() => getLogoBase64(), 1500);
     };
   </script>
